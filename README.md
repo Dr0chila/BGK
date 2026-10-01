@@ -6,7 +6,7 @@ Telegram-бот + Mini App (обучалка `webapp/index.html`). FastAPI + aio
 ## Запуск на сервере
 
 Нужно: Python 3.11+, PostgreSQL, nginx, certbot, домен (Mini App и webhook — только HTTPS).
-Код лежит в `/root/bgk-bot`. Домен `bgk.example.ru` заменить в `deploy/nginx-*.conf` и `.env`.
+Код лежит в `/root/bgk-bot`. Домен: `bgk-obuch.duckdns.org` (DuckDNS → 94.188.92.90).
 
 ```bash
 sudo -u postgres psql -c "CREATE USER bgk WITH PASSWORD 'change-me';" -c "CREATE DATABASE bgk OWNER bgk;"
