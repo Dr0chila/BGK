@@ -23,6 +23,9 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(Text)
     role: Mapped[str] = mapped_column(Text)      # owner | admin | trainee
     status: Mapped[str] = mapped_column(Text)    # pending | active | blocked
+    # Должность (что видно в профиле): manager | senior | waiter | trainee | NULL.
+    # Права по-прежнему решает role; должность её выставляет (см. services.set_position).
+    position: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     @property

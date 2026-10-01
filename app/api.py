@@ -63,7 +63,8 @@ async def me(uid: int = Depends(tg_user_id)):
         u = await session.get(User, uid)
         if u is None:
             return {"registered": False}
-        return {"registered": True, "name": u.full_name, "role": u.role, "status": u.status}
+        return {"registered": True, "name": u.full_name, "role": u.role, "status": u.status,
+                "title": s.title(u), "can_assign": s.assignable(u)}
 
 
 _avatars: dict[int, tuple[float, bytes | None]] = {}
@@ -104,7 +105,7 @@ async def profile(uid: int = Depends(tg_user_id)):
             select(Attempt).where(Attempt.user_id == uid).order_by(Attempt.created_at.desc()).limit(100))
         attempts = [{"mode": a.mode, "topic": a.topic, "score": a.score, "total": a.total, "pct": a.pct,
                      "mistakes": a.mistakes, "at": a.created_at.isoformat()} for a in rows]
-    return {"name": u.full_name, "attempts": attempts}
+    return {"name": u.full_name, "title": s.title(u), "attempts": attempts}
 
 
 @router.post("/results")
@@ -146,14 +147,15 @@ async def admin_trainees(_: int = Depends(admin_id)):
         out = []
         for u in rows:
             p = await s.progress(session, u.tg_id)
-            out.append({"id": u.tg_id, "name": u.full_name, "username": u.username,
+            out.append({"id": u.tg_id, "name": u.full_name, "username": u.username, "title": s.title(u),
                         "topics": p["topics"], "exam": p["exam"], "exams": p["exams"], "last": _iso(p["last"])})
     return {"topics": list(settings.topics), "pass": settings.exam_pass_pct, "items": out}
 
 
 @router.get("/admin/trainees/{tg_id}")
-async def admin_trainee(tg_id: int, _: int = Depends(admin_id)):
+async def admin_trainee(tg_id: int, uid: int = Depends(admin_id)):
     async with Session() as session:
+        me = await session.get(User, uid)
         u = await session.get(User, tg_id)
         if u is None:
             raise HTTPException(404)
@@ -163,7 +165,9 @@ async def admin_trainee(tg_id: int, _: int = Depends(admin_id)):
         attempts = [{"mode": a.mode, "topic": a.topic, "score": a.score, "total": a.total,
                      "pct": a.pct, "at": _iso(a.created_at)} for a in last]
         top = await s.top_mistakes(session, tg_id)
+    options = [{"key": k, "title": s.POSITIONS[k]} for k in s.assignable(me) if s.can_assign(me, u, k)]
     return {"id": u.tg_id, "name": u.full_name, "username": u.username, "topics": p["topics"],
+            "title": s.title(u), "position": u.position, "options": options,
             "exam": p["exam"], "exams": p["exams"], "last": _iso(p["last"]), "attempts": attempts,
             "mistakes": [{"q": q, "n": n} for q, n in top]}
 
@@ -188,3 +192,42 @@ async def admin_decide(tg_id: int, body: Decision, request: Request, uid: int = 
     if text is None:
         raise HTTPException(409, "already decided")
     return {"ok": True}
+
+
+@router.get("/admin/staff")
+async def admin_staff(uid: int = Depends(admin_id)):
+    """Команда: владелец и все с админскими должностями — чтобы видеть, кто есть кто."""
+    async with Session() as session:
+        me = await session.get(User, uid)
+        rows = await session.scalars(
+            select(User).where(User.role.in_(("owner", "admin")), User.status == "active").order_by(User.full_name))
+        items = [{"id": u.tg_id, "name": u.full_name, "username": u.username, "title": s.title(u),
+                  "position": u.position,
+                  "options": [{"key": k, "title": s.POSITIONS[k]} for k in s.assignable(me) if s.can_assign(me, u, k)]}
+                 for u in rows]
+    # владелец сверху, дальше менеджеры, старшие
+    order = {"Владелец": 0, "Менеджер": 1, "Старший официант": 2}
+    items.sort(key=lambda x: (order.get(x["title"], 3), x["name"]))
+    return {"items": items}
+
+
+class PositionBody(BaseModel):
+    position: Literal["manager", "senior", "waiter", "trainee"]
+
+
+@router.post("/admin/position/{tg_id}")
+async def admin_position(tg_id: int, body: PositionBody, request: Request, uid: int = Depends(admin_id)):
+    async with Session() as session:
+        me = await session.get(User, uid)
+        target = await session.get(User, tg_id)
+        if target is None:
+            raise HTTPException(404)
+        if not s.can_assign(me, target, body.position):
+            raise HTTPException(403, "not allowed")
+        await s.set_position(request.app.state.bot, session, target, body.position)
+        title = s.title(target)
+    try:
+        await request.app.state.bot.send_message(tg_id, f"Тебе назначена должность: <b>{title}</b>.")
+    except Exception:
+        pass
+    return {"ok": True, "title": title}

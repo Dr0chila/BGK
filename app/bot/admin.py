@@ -25,11 +25,8 @@ admin = Router()
 admin.message.filter(Role("admin", "owner"))
 admin.callback_query.filter(Role("admin", "owner"))
 
-owner = Router()
-owner.message.filter(Role("owner"))
-
 router = Router()
-router.include_routers(owner, admin)
+router.include_routers(admin)
 
 
 # ---------- заявки ----------
@@ -77,7 +74,7 @@ async def stats_page(session: AsyncSession, page: int) -> tuple[str, InlineKeybo
         p = await s.progress(session, u.tg_id)
         topics = " · ".join(f"{t[:4]} {p['topics'][t]}%" for t in p["topics"] if t) or "тестов нет"
         exam = "—" if p["exam"] is None else f"{p['exam']}%" + (" ✅" if p["exam"] >= settings.exam_pass_pct else "")
-        blocks.append(f"{s.who(u)}\n{topics}\nЭкзамен: {exam} · был(а): {s.fmt_date(p['last'])}")
+        blocks.append(f"{s.who(u)} · {s.title(u)}\n{topics}\nЭкзамен: {exam} · был(а): {s.fmt_date(p['last'])}")
     text = f"Стажёры ({total}), стр. {page + 1}/{pages}:\n\n" + "\n\n".join(blocks) + \
            "\n\nПодробно: /trainee @username"
     nav = []
@@ -118,45 +115,70 @@ async def trainee(m: Message, command: CommandObject, session: AsyncSession) -> 
         for a in last) or "попыток нет"
     top = await s.top_mistakes(session, u.tg_id)
     mis = "\n".join(f"{n}× {escape(q)}" for q, n in top) or "ошибок нет"
-    await m.answer(f"{s.who(u)} · {u.role}, {u.status}\n\n<b>Лучшие результаты</b>\n{s.progress_lines(p)}"
+    await m.answer(f"{s.who(u)} · {s.title(u)}\n\n<b>Лучшие результаты</b>\n{s.progress_lines(p)}"
                    f"\n\n<b>Последние попытки</b>\n{att}\n\n<b>Частые ошибки</b>\n{mis}")
 
 
-# ---------- роли (только владелец) ----------
+# ---------- должности (владелец — любые, менеджер — старший/официант/стажёр) ----------
 
-async def set_role(m: Message, bot: Bot, command: CommandObject, session: AsyncSession, role: str) -> None:
-    if not command.args:
-        await m.answer(f"Формат: /{command.command} @username")
+def _pos_kb(actor: User, target: User) -> InlineKeyboardMarkup:
+    rows = [[InlineKeyboardButton(text=("✓ " if target.position == k else "") + s.POSITIONS[k],
+                                  callback_data=f"pos:{target.tg_id}:{k}")] for k in s.assignable(actor)]
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+@admin.message(Command("position"))
+async def position(m: Message, bot: Bot, command: CommandObject, session: AsyncSession, user: User) -> None:
+    if not s.assignable(user):
+        await m.answer("Назначать должности могут владелец и менеджеры.")
         return
-    u = await s.by_username(session, command.args)
-    if u is None:
-        await m.answer("Не нашёл. Человек должен сначала нажать /start в боте.")
+    parts = (command.args or "").split(maxsplit=1)
+    if not parts:
+        await m.answer("Формат: /position @username — и выбери должность кнопкой.\n"
+                       "Или сразу: /position @username мен | старший | официант | стажёр")
         return
-    if u.role == "owner":
-        await m.answer("Роль владельца не меняется.")
+    target = await s.by_username(session, parts[0])
+    if target is None:
+        await m.answer("Не нашёл. Человек должен сначала нажать /start в боте, и у него должен быть username.")
         return
-    u.role = role
-    if role == "admin":
-        u.status = "active"
-    await session.commit()
-    await s.sync_commands(bot, u)
-    await m.answer(f"{s.who(u)} теперь {'админ' if role == 'admin' else 'стажёр'}.")
+    if len(parts) == 1:
+        await m.answer(f"{s.who(target)} — сейчас: {s.title(target)}.\nКакую должность поставить?",
+                       reply_markup=_pos_kb(user, target))
+        return
+    pos = s.parse_position(parts[1])
+    if pos is None:
+        await m.answer("Не понял должность. Варианты: мен, старший, официант, стажёр.")
+        return
+    await _apply(m.answer, bot, session, user, target, pos)
 
 
-@owner.message(Command("makeadmin"))
-async def makeadmin(m: Message, bot: Bot, command: CommandObject, session: AsyncSession) -> None:
-    await set_role(m, bot, command, session, "admin")
+@admin.callback_query(F.data.startswith("pos:"))
+async def position_cb(c: CallbackQuery, bot: Bot, session: AsyncSession, user: User) -> None:
+    _, raw_id, pos = c.data.split(":")
+    target = await session.get(User, int(raw_id))
+    if target is None or pos not in s.POSITIONS:
+        await c.answer("Человек не найден.", show_alert=True)
+        return
+    await _apply(c.message.edit_text, bot, session, user, target, pos)
+    await c.answer()
 
 
-@owner.message(Command("removeadmin"))
-async def removeadmin(m: Message, bot: Bot, command: CommandObject, session: AsyncSession) -> None:
-    await set_role(m, bot, command, session, "trainee")
+async def _apply(reply, bot: Bot, session: AsyncSession, actor: User, target: User, pos: str) -> None:
+    if not s.can_assign(actor, target, pos):
+        await reply("Эту должность ты назначить не можешь.")
+        return
+    await s.set_position(bot, session, target, pos)
+    await reply(f"✅ {s.who(target)} — теперь {s.POSITIONS[pos].lower()}.")
+    try:
+        await bot.send_message(target.tg_id, f"Тебе назначена должность: <b>{s.POSITIONS[pos]}</b>.")
+    except Exception:
+        pass
 
 
 @admin.message(Command("help"))
 async def admin_help(m: Message, user: User) -> None:
     text = ("/stats — стажёры и прогресс\n/trainee @username — подробно по стажёру\n"
             "/pending — заявки на доступ\n/me — свои результаты")
-    if user.role == "owner":
-        text += "\n/makeadmin @username · /removeadmin @username"
+    if s.assignable(user):
+        text += "\n/position @username — назначить должность"
     await m.answer(text)

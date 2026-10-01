@@ -44,17 +44,66 @@ ADMIN_CMDS = TRAINEE_CMDS + [
     BotCommand(command="trainee", description="Подробно по стажёру: /trainee @ник"),
     BotCommand(command="pending", description="Заявки на доступ"),
 ]
+# Должности назначают владелец и менеджеры
 OWNER_CMDS = ADMIN_CMDS + [
-    BotCommand(command="makeadmin", description="Сделать админом: /makeadmin @ник"),
-    BotCommand(command="removeadmin", description="Снять админа: /removeadmin @ник"),
+    BotCommand(command="position", description="Назначить должность: /position @ник"),
 ]
+
+
+# ---------- должности ----------
+POSITIONS = {"manager": "Менеджер", "senior": "Старший официант", "waiter": "Официант", "trainee": "Стажёр"}
+ADMIN_POSITIONS = {"manager", "senior"}          # дают доступ к админке
+_ALIASES = {"manager": ("мен", "менеджер", "manager", "упр", "управляющий"),
+            "senior": ("старший", "старш", "старший официант", "старш оф", "ст оф", "senior"),
+            "waiter": ("официант", "оф", "waiter"),
+            "trainee": ("стажёр", "стажер", "trainee")}
+
+
+def parse_position(text: str) -> str | None:
+    t = " ".join(text.lower().replace("ё", "е").replace(".", " ").split())
+    for key, names in _ALIASES.items():
+        if t in (n.replace("ё", "е") for n in names):
+            return key
+    return None
+
+
+def title(u: User) -> str:
+    if u.role == "owner":
+        return "Владелец"
+    if u.position in POSITIONS:
+        return POSITIONS[u.position]
+    return "Админ" if u.role == "admin" else "Стажёр"
+
+
+def can_assign(actor: User, target: User, pos: str) -> bool:
+    """Владелец — любую. Менеджер — старшего, официанта, стажёра, и не трогает других менеджеров."""
+    if target.role == "owner" or actor.tg_id == target.tg_id:
+        return False
+    if actor.role == "owner":
+        return True
+    return actor.position == "manager" and pos != "manager" and target.position != "manager"
+
+
+def assignable(actor: User) -> list[str]:
+    if actor.role == "owner":
+        return list(POSITIONS)
+    return ["senior", "waiter", "trainee"] if actor.position == "manager" else []
+
+
+async def set_position(bot: Bot, session: AsyncSession, target: User, pos: str) -> None:
+    target.position = pos
+    target.role = "admin" if pos in ADMIN_POSITIONS else "trainee"
+    if pos in ADMIN_POSITIONS:
+        target.status = "active"
+    await session.commit()
+    await sync_commands(bot, target)
 
 
 async def sync_commands(bot: Bot, user: User) -> None:
     """Админам и владельцу — расширенный список; стажёрам — общий (default)."""
     scope = BotCommandScopeChat(chat_id=user.tg_id)
     try:
-        if user.role == "owner":
+        if user.role == "owner" or (user.role == "admin" and user.position == "manager"):
             await bot.set_my_commands(OWNER_CMDS, scope=scope)
         elif user.role == "admin":
             await bot.set_my_commands(ADMIN_CMDS, scope=scope)
