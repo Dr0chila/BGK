@@ -130,18 +130,48 @@ header.top{padding-top:calc(22px + var(--tg-safe-top,0px))}
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.035)}100%{transform:scale(1)}}
 @keyframes shake{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
 @keyframes grow{from{transform:scaleX(0)}}
-#app>*,#lt>*,.qcard>*,#fb>*,#ad>*{animation:rise .42s cubic-bezier(.2,.8,.2,1) both}
-#lt>*:nth-child(2),.qcard>*:nth-child(2),#ad>*:nth-child(2){animation-delay:.04s}
-#lt>*:nth-child(3),.qcard>*:nth-child(3),#ad>*:nth-child(3){animation-delay:.08s}
-#lt>*:nth-child(4),.qcard>*:nth-child(4),#ad>*:nth-child(4){animation-delay:.12s}
-#lt>*:nth-child(5),.qcard>*:nth-child(5),#ad>*:nth-child(5){animation-delay:.16s}
-#lt>*:nth-child(6),.qcard>*:nth-child(6),#ad>*:nth-child(6){animation-delay:.2s}
-#lt>*:nth-child(n+7),.qcard>*:nth-child(n+7),#ad>*:nth-child(n+7){animation-delay:.24s}
+#app>*,#lt>*,.qcard>*,#fb>*,#ad>*,#pf>*{animation:rise .42s cubic-bezier(.2,.8,.2,1) both}
+#lt>*:nth-child(2),.qcard>*:nth-child(2),#ad>*:nth-child(2),#pf>*:nth-child(2){animation-delay:.04s}
+#lt>*:nth-child(3),.qcard>*:nth-child(3),#ad>*:nth-child(3),#pf>*:nth-child(3){animation-delay:.08s}
+#lt>*:nth-child(4),.qcard>*:nth-child(4),#ad>*:nth-child(4),#pf>*:nth-child(4){animation-delay:.12s}
+#lt>*:nth-child(5),.qcard>*:nth-child(5),#ad>*:nth-child(5),#pf>*:nth-child(5){animation-delay:.16s}
+#lt>*:nth-child(6),.qcard>*:nth-child(6),#ad>*:nth-child(6),#pf>*:nth-child(6){animation-delay:.2s}
+#lt>*:nth-child(n+7),.qcard>*:nth-child(n+7),#ad>*:nth-child(n+7),#pf>*:nth-child(n+7){animation-delay:.24s}
 .opt,.btn,.chip,.card{transition:transform .18s ease,background-color .25s,border-color .25s,box-shadow .25s}
 .opt:active,.btn:active,.chip:active,.card:active{transform:scale(.97)}
 .opt.ok{animation:pop .45s ease}
 .opt.no{animation:shake .45s ease}
 .big{display:inline-block;animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+
+/* ---------- профиль ---------- */
+.hello{display:flex;align-items:center;gap:14px;margin:16px 0 4px}
+.ring{--v:0;width:76px;height:76px;flex:0 0 76px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(var(--pom) calc(var(--v)*1%),var(--line) 0);transition:--v .8s}
+.ring b{width:60px;height:60px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font:600 20px Oswald,sans-serif;color:var(--pom)}
+.hello h2{margin:0}
+.next{position:relative;overflow:hidden;border-radius:18px;padding:16px;margin:14px 0;color:#fff;
+  background:linear-gradient(135deg,var(--pom),#8E0B21);box-shadow:0 10px 24px rgba(200,16,46,.28)}
+.next .k{font-size:13px;letter-spacing:.6px;text-transform:uppercase;opacity:.85}
+.next h3{color:#fff;margin:4px 0 6px;font-size:22px}
+.next p{margin:0 0 12px;opacity:.95}
+.next .btn{background:#fff;color:var(--pom);margin:0}
+.next.done{background:linear-gradient(135deg,var(--ok),#0F5A31);box-shadow:0 10px 24px rgba(30,123,70,.28)}
+.next.done .btn{color:var(--ok)}
+.topic{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:10px 0}
+.topic .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.topic .hd b{font-family:Oswald,sans-serif;font-weight:500;font-size:19px}
+.topic .why{font-size:15px;margin:6px 0 2px}
+.topic .acts{display:flex;gap:8px;margin-top:8px}
+.topic .acts .btn{margin:0;padding:8px 14px;font-size:16px}
+.trend{font-size:13px;margin-left:6px}
+.trend.up{color:var(--ok)} .trend.down{color:var(--pom)}
+.mrow{padding:10px 0;border-bottom:1px solid var(--line)}
+.mrow .q{font-size:16px;font-weight:700;margin:0 0 2px}
+.mrow .right{color:var(--ok);font-size:15px}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.stats3 div{background:var(--teal-soft);border-radius:12px;padding:10px;text-align:center}
+.stats3 b{display:block;font:600 22px Oswald,sans-serif;color:var(--teal)}
+.stats3 span{font-size:13px;color:var(--muted)}
 
 /* ---------- админка ---------- */
 .card{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:10px 0;cursor:pointer;box-shadow:0 2px 8px rgba(35,28,28,.05)}
@@ -179,6 +209,7 @@ header.top{padding-top:calc(22px + var(--tg-safe-top,0px))}
   <button class="tab" data-v="learn"><span class="ico">📚</span><span class="lbl">Учить</span></button>
   <button class="tab" data-v="test"><span class="ico">✏️</span><span class="lbl">Тест</span></button>
   <button class="tab" data-v="exam"><span class="ico">🎓</span><span class="lbl">Экзамен</span></button>
+  <button class="tab" data-v="profile"><span class="ico">👤</span><span class="lbl">Профиль</span></button>
   <button class="tab" data-v="admin" hidden><span class="ico">🛠️</span><span class="lbl">Админ</span></button>
 </div></nav>
 
@@ -494,7 +525,13 @@ function prep(q){
 }
 function startRun(mode,cat){
   let pool;
-  if(mode==="test"){
+  if(mode==="mistakes"){
+    // вопросы, где ошибался недавно: совпадение по тексту вопроса
+    const want=new Set(recentMistakes(profileData?.attempts||[]).map(m=>m.q));
+    pool=shuffle([...QB,...MAPQ].filter(q=>want.has(q.q))).slice(0,15);
+    cat="Работа над ошибками";
+    if(!pool.length){go("profile");return}
+  } else if(mode==="test"){
     pool = cat==="Столы" ? shuffle(MAPQ).slice(0,15) : shuffle(QB.filter(q=>q.cat===cat)).slice(0,15);
   } else {
     const take=(c,n)=>shuffle(QB.filter(q=>q.cat===c)).slice(0,n);
@@ -505,7 +542,7 @@ function startRun(mode,cat){
 }
 function renderQ(){
   const r=run, q=r.qs[r.i], total=r.qs.length;
-  const head=`<div class="qcard"><div class="qmeta"><span>${r.mode==="exam"?"Экзамен":"Тест: "+r.cat}</span><span>${r.i+1} / ${total}</span></div><div class="bar"><i style="width:${(r.i/total)*100}%"></i></div>`;
+  const head=`<div class="qcard"><div class="qmeta"><span>${r.mode==="exam"?"Экзамен":r.mode==="mistakes"?r.cat:"Тест: "+r.cat}</span><span>${r.i+1} / ${total}</span></div><div class="bar"><i style="width:${(r.i/total)*100}%"></i></div>`;
   if(q.t==="mc"){
     app.innerHTML=head+`<div class="q">${esc(q.q)}</div>${q.opts.map((o,k)=>`<button class="opt" data-k="${k}">${esc(o)}</button>`).join("")}<div id="fb"></div></div>`;
     app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answerMC(+b.dataset.k));
@@ -522,9 +559,9 @@ function bindNext(){ $("#nx").onclick=()=>{ if(run.i<run.qs.length-1){run.i++;ru
 function answerMC(k){
   if(run.locked) return; run.locked=true;
   const q=run.qs[run.i], ok=k===q.ans;
-  run.answers.push({q,ok,given:q.opts[k]}); haptic(run.mode==="test"?(ok?"ok":"no"):"tap");
+  run.answers.push({q,ok,given:q.opts[k]}); haptic(run.mode!=="exam"?(ok?"ok":"no"):"tap");
   const btns=app.querySelectorAll(".opt"); btns.forEach(b=>b.disabled=true);
-  if(run.mode==="test"){
+  if(run.mode!=="exam"){
     btns[q.ans].classList.add("ok"); if(!ok) btns[k].classList.add("no");
     $("#fb").innerHTML=`<div class="ex"><b>${ok?"Верно.":"Неверно."}</b> ${esc(q.ex||"")}</div>`+nextBtn();
   } else { btns[k].classList.add("pick"); $("#fb").innerHTML=nextBtn(); }
@@ -533,10 +570,10 @@ function answerMC(k){
 function answerMap(n){
   if(run.locked) return; run.locked=true;
   const q=run.qs[run.i], ok=n===q.target;
-  run.answers.push({q,ok,given:"стол "+n}); haptic(run.mode==="test"?(ok?"ok":"no"):"tap");
+  run.answers.push({q,ok,given:"стол "+n}); haptic(run.mode!=="exam"?(ok?"ok":"no"):"tap");
   const svg=app.querySelector("svg.map");
   const g=svg.querySelector(`.t[data-n="${n}"]`), gt=svg.querySelector(`.t[data-n="${q.target}"]`);
-  if(run.mode==="test"){
+  if(run.mode!=="exam"){
     gt.classList.add("ok"); if(!ok) g.classList.add("no");
     $("#fb").innerHTML=`<div class="ex"><b>${ok?"Верно.":"Неверно, ты нажал "+n+"."}</b> Стол ${q.target}: ${TABLE_NOTES[q.target]||""}</div>`+nextBtn();
   } else { g.classList.add("hl"); $("#fb").innerHTML=nextBtn(); }
@@ -551,19 +588,22 @@ function finish(){
     const best=store.get("bgk_best",0); if(pct>best) store.set("bgk_best",pct);
     verdict=passed?"Экзамен сдан. Ты готов к проверке.":"Пока не сдан: нужно 85% и выше. Повтори темы с ошибками в тестах и пересдай.";
   } else verdict=pct>=85?"Тема закрыта. Переходи к следующей.":"Повтори тему в разделе «Учить» и пройди тест ещё раз.";
-  if(TG?.initData) fetch('/api/results',{method:'POST',headers:{'Content-Type':'application/json','X-Init-Data':TG.initData},
+  const rec={mode:r.mode,topic:r.mode==='test'?r.cat:null,score:right,total,pct,at:new Date().toISOString(),
+    mistakes:wrong.map(a=>({cat:a.q.cat,q:a.q.q,given:a.given,right:a.q.t==='mc'?a.q.right:'стол '+a.q.target}))};
+  if(r.mode!=='mistakes'){const h=store.get("bgk_hist",[]);h.unshift(rec);store.set("bgk_hist",h.slice(0,100))}
+  if(TG?.initData&&r.mode!=='mistakes') pendingSave=fetch('/api/results',{method:'POST',headers:{'Content-Type':'application/json','X-Init-Data':TG.initData},
     body:JSON.stringify({mode:r.mode,topic:r.mode==='test'?r.cat:null,score:right,total,pct,
       mistakes:wrong.map(a=>({cat:a.q.cat,q:a.q.q,given:a.given,right:a.q.t==='mc'?a.q.right:'стол '+a.q.target}))})}).catch(()=>{});
   const weak={}; wrong.forEach(a=>weak[a.q.cat]=(weak[a.q.cat]||0)+1);
   app.innerHTML=`<div class="big">${pct}%</div><p><b>${right} из ${total}.</b> ${verdict}</p>`+
    (Object.keys(weak).length?`<div class="warn">Ошибки по темам: ${Object.entries(weak).map(([c,n])=>`${c} — ${n}`).join(", ")}</div>`:"")+
-   `<div class="row"><button class="btn" id="again">${r.mode==="exam"?"Пересдать":"Ещё раз"}</button><button class="btn ghost" id="back">${r.mode==="exam"?"К экзамену":"К темам"}</button></div>`+
+   `<div class="row"><button class="btn" id="again">${r.mode==="exam"?"Пересдать":"Ещё раз"}</button><button class="btn ghost" id="back">${r.mode==="exam"?"К экзамену":r.mode==="mistakes"?"В профиль":"К темам"}</button></div>`+
    (wrong.length?`<h3>Разбор ошибок</h3>`+wrong.map(a=>{
      const corr=a.q.t==="mc"?a.q.right:`стол ${a.q.target} — ${TABLE_NOTES[a.q.target]||""}`;
      return `<div class="mist"><b>${esc(a.q.q)}</b><br><span class="yours">Твой ответ: ${esc(a.given)}</span><br><span class="right">Правильно: ${esc(corr)}</span>${a.q.ex?`<br><span class="meta">${esc(a.q.ex)}</span>`:""}</div>`}).join(""):"");
   countUp(app.querySelector(".big"),pct);
   $("#again").onclick=()=>startRun(r.mode,r.cat);
-  $("#back").onclick=()=>{run=null;go(r.mode)};
+  $("#back").onclick=()=>{run=null;go(r.mode==="mistakes"?"profile":r.mode)};
   window.scrollTo(0,0);
 }
 function renderTestMenu(){
@@ -600,11 +640,103 @@ function placePill(v){
 function go(v){
   placePill(v);
   run=null;
-  if(v==="learn") renderLearn(); if(v==="test") renderTestMenu(); if(v==="exam") renderExamMenu(); if(v==="admin") renderAdmin();
+  if(v==="learn") renderLearn(); if(v==="test") renderTestMenu(); if(v==="exam") renderExamMenu(); if(v==="admin") renderAdmin(); if(v==="profile") renderProfile();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{haptic("tap");go(t.dataset.v)});
-go("learn");
+
+/* ===================== PROFILE ===================== */
+// Источник: сервер (если открыто из Telegram) или локальная история. Аналитика — здесь.
+let profileData=null, pendingSave=null;
+const PASS=85;
+async function loadProfile(){
+  if(TG){
+    try{ if(pendingSave) await pendingSave.catch(()=>{});
+         const d=await api("/api/profile"); return {name:d.name,attempts:d.attempts}; }catch(e){}
+  }
+  return {name:TG?.initDataUnsafe?.user?.first_name||"", attempts:store.get("bgk_hist",[])};
+}
+// Ошибки из последних 5 попыток по каждой теме: старые, уже исправленные, не тянем
+function recentMistakes(atts){
+  const seen={}, out=[];
+  for(const a of atts){
+    const key=a.mode==="exam"?"exam":a.topic;
+    seen[key]=(seen[key]||0)+1; if(seen[key]>5) continue;
+    for(const m of a.mistakes||[]) out.push(m);
+  }
+  return out;
+}
+function analyze(atts){
+  const T={};
+  TOPICS.forEach(t=>T[t]={best:null,last:null,prev:null,n:0,err:0});
+  for(const a of atts){            // от новых к старым
+    if(a.mode!=="test"||!T[a.topic]) continue;
+    const x=T[a.topic]; x.n++;
+    if(x.last==null) x.last=a.pct; else if(x.prev==null) x.prev=a.pct;
+    x.best=Math.max(x.best??0,a.pct);
+  }
+  const rm=recentMistakes(atts);
+  rm.forEach(m=>{if(T[m.cat]) T[m.cat].err++});
+  const exams=atts.filter(a=>a.mode==="exam");
+  const examBest=exams.length?Math.max(...exams.map(a=>a.pct)):null;
+  const ready=Math.round(TOPICS.reduce((s,t)=>s+Math.min(T[t].best??0,100),0)/TOPICS.length);
+  // count: сколько раз ошибся в этом вопросе недавно
+  const byQ={}; rm.forEach(m=>{(byQ[m.q]=byQ[m.q]||{...m,n:0}).n++});
+  const top=Object.values(byQ).sort((a,b)=>b.n-a.n);
+  return {T,exams,examBest,ready,top,total:atts.length};
+}
+function topicState(x){
+  if(x.best==null) return {cls:"",txt:"не начато",why:"Ещё не проходил тест."};
+  if(x.best>=PASS) return {cls:"ok",txt:"закрыта",why:x.last<PASS?`Закрыта, но последний тест ${x.last}% — освежи.`:"Всё хорошо."};
+  if(x.best>=60) return {cls:"",txt:"почти",why:`Лучший ${x.best}% — до ${PASS}% чуть-чуть.`+(x.err?` Ошибок недавно: ${x.err}.`:"")};
+  return {cls:"no",txt:"слабо",why:`Лучший ${x.best}%. Сначала повтори материал, потом тест.`+(x.err?` Ошибок недавно: ${x.err}.`:"")};
+}
+// Один понятный следующий шаг вместо «разбирайся сам»
+function nextStep(A){
+  const notStarted=TOPICS.find(t=>A.T[t].best==null);
+  const weak=TOPICS.filter(t=>A.T[t].best!=null&&A.T[t].best<PASS).sort((a,b)=>A.T[a].best-A.T[b].best)[0];
+  if(weak) return {k:"Подтяни слабую тему",h:weak,p:`Лучший результат ${A.T[weak].best}%, нужно ${PASS}%. Повтори материал и пройди тест ещё раз.`,
+    btn:"Повторить тему",act:()=>{learnTab=weak;store.set("bgk_learn",weak);go("learn")},btn2:"Сразу тест",act2:()=>startRun("test",weak)};
+  if(notStarted) return {k:"Следующая тема",h:notStarted,p:"Сначала прочитай материал, потом проверь себя тестом из 15 вопросов.",
+    btn:"Учить",act:()=>{learnTab=notStarted;store.set("bgk_learn",notStarted);go("learn")},btn2:"Сразу тест",act2:()=>startRun("test",notStarted)};
+  if(A.examBest==null||A.examBest<PASS) return {k:"Все темы закрыты",h:"Время экзамена",
+    p:A.examBest==null?"38 вопросов вперемешку, ответы покажут в конце. Нужно 85%.":`Лучший экзамен ${A.examBest}%. Нужно ${PASS}%. Перед пересдачей пройди работу над ошибками.`,
+    btn:"Сдать экзамен",act:()=>startRun("exam")};
+  return {done:true,k:"Обучение пройдено",h:"Экзамен сдан 🎉",p:`Лучший результат ${A.examBest}%. Можно идти на проверку к управляющему.`,
+    btn:"Повторить ошибки",act:()=>startRun("mistakes")};
+}
+async function renderProfile(){
+  app.innerHTML=`<section id="pf">${skel(3)}</section>`;
+  profileData=await loadProfile();
+  const el=$("#pf"); if(!el) return;   // пока грузили, ушли на другую вкладку
+  const A=analyze(profileData.attempts), N=nextStep(A);
+  el.innerHTML=`
+    <div class="hello"><div class="ring" style="--v:0"><b>${A.ready}%</b></div>
+      <div><h2>${profileData.name?esc(profileData.name):"Твой прогресс"}</h2><div class="meta">Готовность — средний лучший результат по 5 темам</div></div></div>
+    <div class="next${N.done?" done":""}"><div class="k">${N.k}</div><h3>${esc(N.h)}</h3><p>${N.p}</p>
+      <div class="row" style="margin:0"><button class="btn" id="n1">${N.btn}</button>${N.btn2?`<button class="btn" id="n2" style="background:transparent;color:#fff;border:2px solid #fff">${N.btn2}</button>`:""}</div></div>
+    <div class="stats3"><div><b>${A.total}</b><span>попыток</span></div><div><b>${TOPICS.filter(t=>A.T[t].best>=PASS).length}/5</b><span>тем закрыто</span></div><div><b>${A.examBest==null?"—":A.examBest+"%"}</b><span>экзамен</span></div></div>
+    <h3>По темам</h3>
+    ${TOPICS.map(t=>{const x=A.T[t],st=topicState(x),d=x.last!=null&&x.prev!=null?x.last-x.prev:null;
+      return `<div class="topic"><div class="hd"><b>${t}</b><span><span class="badge ${st.cls}">${st.txt}</span></span></div>
+        ${progRow("Лучший",x.best,PASS)}
+        <div class="why">${st.why}${d?`<span class="trend ${d>0?"up":"down"}">${d>0?"▲ +":"▼ "}${d}% к прошлому</span>`:""}</div>
+        ${x.best==null||x.best<PASS?`<div class="acts"><button class="btn ghost" data-learn="${t}">Учить</button><button class="btn" data-test="${t}">Тест</button></div>`:""}</div>`}).join("")}
+    <h3>Где ошибаешься чаще всего</h3>
+    ${A.top.length?`<p class="lead">По последним 5 попыткам в каждой теме — старые ошибки уходят сами, когда проходишь тест заново.</p>`+
+      A.top.slice(0,8).map(m=>`<div class="mrow"><div class="q">${esc(m.q)}</div><div class="meta">${esc(m.cat)} · ошибся ${m.n}× · твой ответ: ${esc(m.given)}</div><div class="right">Правильно: ${esc(m.right)}</div></div>`).join("")+
+      `<button class="btn" id="fix">🔁 Работа над ошибками</button>`
+      :empty(A.total?"Ошибок нет — так держать!":"Пока пусто. Пройди первый тест — здесь появится разбор.")}
+    ${A.exams.length?`<h3>Экзамены</h3>`+A.exams.slice(0,5).map(a=>`<div class="att"><span>🎓 ${a.score}/${a.total}</span><span>${pctBadge(a.pct,PASS)} <span class="meta">${fmtDate(a.at)}</span></span></div>`).join(""):""}`;
+  requestAnimationFrame(()=>el.querySelector(".ring")?.style.setProperty("--v",A.ready));
+  $("#n1").onclick=()=>{haptic("tap");N.act()};
+  if(N.btn2) $("#n2").onclick=()=>{haptic("tap");N.act2()};
+  $("#fix")&&($("#fix").onclick=()=>{haptic("tap");startRun("mistakes")});
+  el.querySelectorAll("[data-learn]").forEach(b=>b.onclick=()=>{haptic("tap");learnTab=b.dataset.learn;store.set("bgk_learn",learnTab);go("learn")});
+  el.querySelectorAll("[data-test]").forEach(b=>b.onclick=()=>{haptic("tap");startRun("test",b.dataset.test)});
+}
+// CSS-переменную кольца можно анимировать только через @property
+try{CSS.registerProperty({name:"--v",syntax:"<number>",inherits:true,initialValue:"0"})}catch(e){}
 
 /* ===================== ADMIN ===================== */
 // Вкладка видна только админам: роль берём с сервера по подписанному initData.
@@ -677,6 +809,8 @@ async function adminPending(){
     });
   }catch(e){el.innerHTML=`<div class="warn">Не удалось загрузить заявки.</div>`}
 }
+
+go("profile");
 </script>
 </body>
 </html>

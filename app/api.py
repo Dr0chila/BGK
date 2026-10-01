@@ -66,6 +66,21 @@ async def me(uid: int = Depends(tg_user_id)):
         return {"registered": True, "name": u.full_name, "role": u.role, "status": u.status}
 
 
+@router.get("/profile")
+async def profile(uid: int = Depends(tg_user_id)):
+    """Сырые попытки (последние 100) — аналитику по темам считает мини-апп,
+    тем же кодом, что и для офлайн-истории из localStorage."""
+    async with Session() as session:
+        u = await session.get(User, uid)
+        if u is None or u.status != "active":
+            raise HTTPException(403, "not active")
+        rows = await session.scalars(
+            select(Attempt).where(Attempt.user_id == uid).order_by(Attempt.created_at.desc()).limit(100))
+        attempts = [{"mode": a.mode, "topic": a.topic, "score": a.score, "total": a.total, "pct": a.pct,
+                     "mistakes": a.mistakes, "at": a.created_at.isoformat()} for a in rows]
+    return {"name": u.full_name, "attempts": attempts}
+
+
 @router.post("/results")
 async def results(body: Result, request: Request, uid: int = Depends(tg_user_id)):
     async with Session() as session:
