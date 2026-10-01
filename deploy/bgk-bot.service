@@ -1,0 +1,24 @@
+# sudo cp deploy/bgk-bot.service /etc/systemd/system/
+# sudo systemctl daemon-reload && sudo systemctl enable --now bgk-bot
+# Логи: journalctl -u bgk-bot -f   (и /root/bgk-bot/bot.log с ротацией)
+[Unit]
+Description=BGK training bot + mini app
+After=network-online.target postgresql.service
+Wants=network-online.target postgresql.service
+# Не сдаваться никогда: если база или сеть лежат долго, бот поднимется сам,
+# как только они вернутся. О падениях владелец узнаёт из уведомлений бота.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=/root/bgk-bot
+# .env читается из рабочего каталога (pydantic-settings)
+ExecStartPre=/root/bgk-bot/.venv/bin/alembic upgrade head
+ExecStart=/root/bgk-bot/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

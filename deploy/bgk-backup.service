@@ -1,0 +1,6 @@
+[Unit]
+Description=BGK bot database backup
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /root/bgk-bot/deploy/backup.sh

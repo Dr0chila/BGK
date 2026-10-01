@@ -1,0 +1,65 @@
+# БГК — бот обучения официантов
+
+Telegram-бот + Mini App (обучалка `webapp/index.html`). FastAPI + aiogram 3 + PostgreSQL.
+ТЗ: `Desktop/БГК/BOT_SPEC.md`. Источник правды по контенту — основное меню (`62ef…pdf`).
+
+## Запуск на сервере
+
+Нужно: Python 3.11+, PostgreSQL, nginx, certbot, домен (Mini App и webhook — только HTTPS).
+Код лежит в `/root/bgk-bot`. Домен `bgk.example.ru` заменить в `deploy/nginx-*.conf` и `.env`.
+
+```bash
+sudo -u postgres psql -c "CREATE USER bgk WITH PASSWORD 'change-me';" -c "CREATE DATABASE bgk OWNER bgk;"
+cd /root/bgk-bot
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+cp .env.example .env        # BOT_TOKEN, OWNER_ID, домен, WEBHOOK_SECRET, DATABASE_URL
+```
+
+1. **HTTPS** — два этапа, инструкция в шапке `deploy/nginx-bgk.conf`, потом `deploy/nginx-bgk-ssl.conf`.
+2. **Сервис**: `cp deploy/bgk-bot.service /etc/systemd/system/ && systemctl daemon-reload && systemctl enable --now bgk-bot`
+3. **Бэкапы базы**: `cp deploy/bgk-backup.service deploy/bgk-backup.timer /etc/systemd/system/ && systemctl enable --now bgk-backup.timer`
+4. **Обновления**: залить файлы → `bash deploy/deploy.sh`.
+
+### Что защищает от падений
+
+| Что | Как |
+|---|---|
+| Процесс упал | systemd поднимает через 5 сек, без лимита попыток; стартует после сети и PostgreSQL |
+| Перезагрузка сервера | `enable` — бот и таймер бэкапов стартуют сами |
+| Ошибка в хендлере | `dp.errors`: в лог с user_id, человеку «попробуй ещё раз», владельцу в личку (≤1 раз в 5 мин) |
+| Ошибка в API мини-аппа | лог + уведомление владельцу, ответ 500 без утечки деталей |
+| Битый апдейт | webhook всегда отвечает 200 — Telegram не зацикливается на одном сообщении |
+| Сообщения во время рестарта | не сбрасываются (`drop_pending_updates` выключен) |
+| Webhook сбили | раз в 10 минут сверка и автопочинка + уведомление владельцу |
+| Логи | journald + `bot.log` с ротацией 10 МБ × 5 |
+| База | дамп каждый день в 04:30 и перед каждым деплоем, хранятся 14 дней (`backups/db`) |
+| Плохой деплой | `deploy.sh`: проверка файлов, импорта, миграции, рестарт, ждёт `/health` 30 сек, иначе откат кода |
+| Мониторинг | `GET /health` проверяет и процесс, и базу (503, если база недоступна) |
+
+Логи: `journalctl -u bgk-bot -f`. Статус: `systemctl status bgk-bot`.
+
+Локальная проверка без домена: `BOT_MODE=polling` — бот работает, но кнопка обучалки
+в Telegram откроется только по HTTPS-адресу (`WEBAPP_URL`), например через туннель.
+
+## Роли и команды
+
+- **Владелец** (`OWNER_ID`): всё, что админ, плюс `/makeadmin @user`, `/removeadmin @user`.
+- **Админ**: `/stats`, `/trainee @user`, `/pending`, `/help`. Получает уведомления о заявках и сданных экзаменах (≥85%).
+- **Стажёр**: `/start` (регистрация по имени), `/me`.
+
+`REGISTRATION_MODE=approval` — доступ после подтверждения админом; `open` — сразу.
+Отклонённая заявка удаляется, человек может подать заново.
+
+## Что поправлено в обучалке по меню
+
+- Обед №3: «суп с фасолью» → «суп харчо с фасолью»; мясо/бульон — уточнять на кухне.
+- Цены: 290 ₽ будни до 18:00, 350 ₽ после 18:00 / сб, вс, праздники, кроме PRIME.
+- Добавлены 8 вопросов по ценам меню (гарниры 200, соус 110, лепёшка 50, хинкали 4 шт и др.).
+- Подключён Telegram WebApp SDK, результаты тестов/экзамена уходят в `/api/results`.
+
+## Открыто (к управляющему)
+
+- Харчо с фасолью в Обеде №3: с мясом/на бульоне или постный.
+- Можно ли заменять блюда в обеде (пхали при аллергии на орехи).
+- Есть ли яйцо в тесте хинкали (фабричное).
+- У Осадии Мерло нет описания вкуса в базе вин.
