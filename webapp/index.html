@@ -6,75 +6,137 @@
 <title>БГК — обучалка официанта</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+/* ================= Дизайн: минимализм, воздух, карточки =================
+   Заголовки и цифры — Unbounded (строгий, с характером), текст — Manrope.
+   Тёмная и светлая темы — одни и те же токены. */
 :root{
-  --pom:#C8102E; --pom-soft:#FBE3E7; --teal:#135E66; --teal-soft:#DCEDEE;
-  --ink:#231C1C; --muted:#6B5F5F; --paper:#FFFFFF; --line:#EADCDC; --ok:#1E7B46; --ok-soft:#E1F3E8; --bad-soft:#FDE6E6;
-  --table:#FFFFFF; --wall:#231C1C;
+  --bg:#F6F3F1; --paper:#FFFFFF; --surface:#FFFFFF; --surface2:#F0EBE8;
+  --ink:#1E1919; --muted:#776B6B; --line:#E7DFDB;
+  --pom:#C8102E; --pom-soft:#FBE6EA; --teal:#13666F; --teal-soft:#E2F0F1;
+  --ok:#1E7B46; --ok-soft:#E3F4EA; --bad-soft:#FDE8E8;
+  --table:#FFFFFF; --wall:#1E1919;
+  --r:20px; --shadow:0 1px 2px rgba(30,25,25,.04),0 8px 24px rgba(30,25,25,.06);
+  --head:"Unbounded","Arial Black",system-ui,sans-serif; --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --pom:#FF5A73; --pom-soft:#3A1A20; --teal:#5BC3CC; --teal-soft:#132E31;
-    --ink:#F3ECEC; --muted:#B5A8A8; --paper:#171313; --line:#3A3030; --ok:#5BD48D; --ok-soft:#14301F; --bad-soft:#3A1717;
-    --table:#241D1D; --wall:#F3ECEC;
+    --bg:#110F0F; --paper:#1A1717; --surface:#1A1717; --surface2:#242020;
+    --ink:#F3EDED; --muted:#A39797; --line:rgba(255,255,255,.08);
+    --pom:#FF5A73; --pom-soft:rgba(255,90,115,.12); --teal:#62C6CF; --teal-soft:rgba(98,198,207,.10);
+    --ok:#5BD48D; --ok-soft:rgba(91,212,141,.12); --bad-soft:rgba(255,90,115,.10);
+    --table:#242020; --wall:#F3EDED; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.25);
   }
 }
 :root[data-theme="dark"]{
-  --pom:#FF5A73; --pom-soft:#3A1A20; --teal:#5BC3CC; --teal-soft:#132E31;
-  --ink:#F3ECEC; --muted:#B5A8A8; --paper:#171313; --line:#3A3030; --ok:#5BD48D; --ok-soft:#14301F; --bad-soft:#3A1717;
-  --table:#241D1D; --wall:#F3ECEC;
+  --bg:#110F0F; --paper:#1A1717; --surface:#1A1717; --surface2:#242020;
+  --ink:#F3EDED; --muted:#A39797; --line:rgba(255,255,255,.08);
+  --pom:#FF5A73; --pom-soft:rgba(255,90,115,.12); --teal:#62C6CF; --teal-soft:rgba(98,198,207,.10);
+  --ok:#5BD48D; --ok-soft:rgba(91,212,141,.12); --bad-soft:rgba(255,90,115,.10);
+  --table:#242020; --wall:#F3EDED; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.25);
 }
 *,*::before,*::after{box-sizing:inherit}
-html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font:17px/1.5 "PT Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
-h1,h2,h3,.tab,.chip,.big{font-family:Oswald,"Arial Narrow",Impact,sans-serif}
-.wrap{max-width:720px;margin:0 auto;padding:0 16px 110px}
-header.top{padding:22px 0 6px;border-bottom:3px solid var(--pom)}
-header.top h1{margin:0;font-size:34px;line-height:1.05;color:var(--pom);letter-spacing:.5px}
-header.top p{margin:6px 0 10px;color:var(--muted);font-size:15px}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:14px 0 6px;scrollbar-width:none}
-.chip{flex:0 0 auto;border:2px solid var(--pom);background:transparent;color:var(--pom);padding:6px 14px;border-radius:999px;font-size:17px;cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--pom);color:#fff}
-h2{font-size:26px;margin:18px 0 6px;color:var(--ink)}
-h3{font-size:20px;margin:18px 0 4px;color:var(--teal)}
-.lead{color:var(--muted);margin:0 0 12px}
-.lunch{border-left:6px solid var(--pom);padding:4px 0 4px 14px;margin:22px 0}
-.lunch h3{margin-top:0;color:var(--pom);font-size:24px}
-.dish{margin:10px 0}
-.dish b{display:block}
-.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.tag{font-size:13px;padding:1px 8px;border-radius:6px;background:var(--teal-soft);color:var(--teal)}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+h1,h2,h3,.chip,.big,.btn{font-family:var(--head)}
+b,strong{font-weight:700}
+.wrap{max-width:680px;margin:0 auto;padding:0 16px 120px}
+
+/* шапка — компактный логотип вместо огромного заголовка */
+header.top{display:flex;align-items:center;gap:10px;padding:calc(18px + var(--tg-safe-top,0px)) 0 4px}
+header.top .logo{font:600 13px/1 var(--head);letter-spacing:.5px;color:#fff;background:var(--pom);padding:7px 9px;border-radius:10px}
+header.top h1{margin:0;font:500 14px/1.2 var(--head);letter-spacing:.2px;color:var(--ink)}
+header.top h1 span{display:block;font:500 12px/1.3 var(--body);color:var(--muted);letter-spacing:0}
+
+/* типографика */
+h2{font-size:22px;font-weight:600;line-height:1.25;margin:26px 0 6px;letter-spacing:-.2px}
+h3{font-size:15px;font-weight:600;line-height:1.3;margin:24px 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.lead{color:var(--muted);margin:0 0 14px;font-size:15px}
+.meta{color:var(--muted);font-size:13px}
+p{margin:0 0 8px}
+
+/* переключатели тем */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:14px 0 4px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:0;background:var(--surface2);color:var(--muted);padding:9px 15px;border-radius:999px;font-size:13px;font-weight:500;cursor:pointer;letter-spacing:.2px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.floorsel{display:inline-flex;gap:4px;padding:4px;background:var(--surface2);border-radius:999px;margin:4px 0 12px}
+.floorsel .chip{background:transparent;padding:7px 14px}
+.floorsel .chip[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+/* базовые блоки */
+.blk,.note,.warn,.lunch,.wine,.topic,.card,.dish-card,.cheat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.blk,.note,.warn{padding:16px 18px;margin:12px 0}
+.blk-t{font:600 12px/1.3 var(--head);text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:0 0 10px}
+.warn{background:var(--pom-soft);border-color:transparent;box-shadow:none}
+.warn .blk-t{color:var(--pom)}
+.note{background:var(--teal-soft);border-color:transparent;box-shadow:none}
+.note .blk-t{color:var(--teal)}
+/* списки и пары «ключ — значение» вместо сплошного текста */
+ul.clean{list-style:none;margin:0;padding:0}
+ul.clean li{position:relative;padding:7px 0 7px 18px;border-top:1px solid var(--line)}
+ul.clean li:first-child{border-top:0;padding-top:0}
+ul.clean li:last-child{padding-bottom:0}
+ul.clean li::before{content:"";position:absolute;left:2px;top:16px;width:6px;height:6px;border-radius:50%;background:var(--pom);opacity:.7}
+ul.clean li:first-child::before{top:9px}
+.facts{display:grid;grid-template-columns:minmax(92px,36%) 1fr;gap:9px 16px;margin:0;font-size:15px}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0;font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+.tile:last-child:nth-child(odd){grid-column:span 2}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.tile b{display:block;font:600 18px/1.2 var(--head);color:var(--pom)}
+.tile span{font-size:13px;color:var(--muted)}
+
+/* обеды */
+.lunch{padding:16px 18px;margin:12px 0}
+.lunch h3{margin:0;font-size:17px;color:var(--ink);text-transform:none;letter-spacing:-.2px}
+.lunch .hook{font-size:14px;color:var(--muted);margin:2px 0 6px}
+.dish{padding:12px 0;border-top:1px solid var(--line)}
+.dish:first-of-type{border-top:0}
+.dish b{display:block;font-size:15px;margin-bottom:2px}
+.dish .d{font-size:14px;color:var(--muted);line-height:1.55}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tag{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--surface2);color:var(--muted)}
 .tag.w{background:var(--pom-soft);color:var(--pom)}
-.note{background:var(--teal-soft);padding:12px 14px;border-radius:10px;margin:14px 0}
-.warn{background:var(--pom-soft);padding:12px 14px;border-radius:10px;margin:14px 0}
-table.grid{width:100%;border-collapse:collapse;margin:8px 0}
-table.grid td,table.grid th{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top;font-size:16px}
-table.grid th{font-family:Oswald,sans-serif;font-weight:500;color:var(--muted)}
-.scroll{overflow-x:auto}
-.step{display:grid;grid-template-columns:42px 1fr;gap:10px;margin:16px 0}
-.step .n{font-family:Oswald,sans-serif;font-size:30px;line-height:1;color:var(--pom);text-align:center}
-.step p{margin:2px 0}
-.wine{padding:12px 0;border-bottom:1px solid var(--line)}
+
+/* сервис — таймлайн */
+.steps{position:relative;margin:8px 0}
+.step{display:grid;grid-template-columns:34px 1fr;gap:14px;padding:0 0 18px}
+.step .n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:600 14px var(--head);color:var(--pom);background:var(--pom-soft);position:relative;z-index:1}
+.step:not(:last-child) .n::after{content:"";position:absolute;top:38px;left:16px;width:2px;height:calc(100% + 0px);background:var(--line);z-index:-1}
+.step b{display:block;font-size:15px;margin-top:5px}
+.step p{margin:3px 0 0;font-size:14px;color:var(--muted);line-height:1.6}
+
+/* вина */
+.wine{padding:16px 18px;margin:10px 0}
 .wine .head{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
-.wine .price{font-family:Oswald,sans-serif;color:var(--teal);white-space:nowrap}
-.wine .meta{color:var(--muted);font-size:15px}
-.wine .pitch{font-style:italic;margin-top:4px}
-.dict{padding:10px 0;border-bottom:1px solid var(--line)}
-.dict b{color:var(--pom)}
-/* map */
-.mapbox{margin:10px 0 4px}
-.floorsel{display:flex;gap:8px;margin:8px 0}
+.wine .head b{font-size:16px}
+.wine .price{font:600 15px var(--head);color:var(--pom);white-space:nowrap}
+.wine .meta{margin:2px 0 8px}
+.wine .taste{font-size:14px}
+.wine .pitch{margin:10px 0 8px;padding:10px 12px;border-radius:12px;background:var(--surface2);font-size:14px;font-style:italic}
+.wine .pair{font-size:13px;color:var(--muted)}
+.wine .pair b{color:var(--ink);font-weight:600}
+
+/* словарь */
+.dict{display:grid;grid-template-columns:minmax(96px,34%) 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--line);font-size:14px}
+.dict:first-child{border-top:0}
+.dict b{color:var(--ink);font-weight:700;font-size:15px}
+.dict span{color:var(--muted);line-height:1.55}
+.saucelist{display:flex;flex-wrap:wrap;gap:6px}
+
+/* карта столов */
+.mapbox{margin:4px 0 0;padding:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 svg.map{width:100%;height:auto;display:block;touch-action:manipulation}
-svg.map .wall{fill:none;stroke:var(--wall);stroke-width:3}
-svg.map .fix{fill:var(--teal-soft);stroke:var(--teal);stroke-width:2}
-svg.map .fixt{fill:var(--teal);font:600 18px Oswald,sans-serif}
+svg.map .wall{fill:none;stroke:var(--wall);stroke-width:2.5;opacity:.85}
+svg.map .fix{fill:var(--teal-soft);stroke:var(--teal);stroke-width:1.5}
+svg.map .fixt{fill:var(--teal);font:600 15px var(--body)}
 svg.map .t{cursor:pointer}
-svg.map .t .s{fill:var(--table);stroke:var(--wall);stroke-width:2.5}
-svg.map .t text{fill:var(--ink);font:700 22px Oswald,sans-serif;pointer-events:none}
+svg.map .t .s{fill:var(--table);stroke:var(--wall);stroke-width:2;transition:fill .2s,stroke .2s}
+svg.map .t text{fill:var(--ink);font:700 19px var(--body);pointer-events:none}
 svg.map .t.hl .s{fill:var(--pom);stroke:var(--pom)}
 svg.map .t.hl text{fill:#fff}
 svg.map .t.ok .s{fill:var(--ok);stroke:var(--ok)}
@@ -83,28 +145,31 @@ svg.map .t.no .s{fill:var(--pom-soft);stroke:var(--pom);stroke-dasharray:6 4}
 svg.map.quiz .t text{opacity:0}
 svg.map.quiz .t.ok text,svg.map.quiz .t.no text,svg.map.quiz.reveal .t text{opacity:1}
 svg.map .t:focus-visible .s{stroke:var(--teal);stroke-width:5}
-.mapinfo{min-height:52px;padding:10px 12px;border-radius:10px;background:var(--teal-soft);margin-top:8px}
-/* quiz */
-.qcard{margin-top:16px}
-.qmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:15px}
-.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:6px 0 14px}
-.bar i{display:block;height:100%;background:var(--pom);transition:width .3s}
-.q{font-size:21px;line-height:1.35;margin:4px 0 14px;font-weight:700}
-.opt{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0;cursor:pointer}
-.opt:hover{border-color:var(--teal)}
-.opt:focus-visible,.btn:focus-visible,.chip:focus-visible,.tab:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.mapinfo{min-height:48px;padding:12px 16px;border-radius:16px;background:var(--surface2);margin-top:10px;font-size:15px}
+
+/* тест */
+.qcard{margin-top:18px}
+.qmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;font-weight:600}
+.bar{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin:8px 0 18px}
+.bar i{display:block;height:100%;background:var(--pom);border-radius:2px;transition:width .35s}
+.q{font:600 19px/1.4 var(--body);margin:0 0 14px;letter-spacing:-.1px}
+.opt{display:block;width:100%;text-align:left;font:500 15px/1.45 var(--body);color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;margin:8px 0;cursor:pointer}
+.opt:hover{border-color:color-mix(in srgb,var(--ink) 25%,transparent)}
+.opt:focus-visible,.btn:focus-visible,.chip:focus-visible,.tab:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .opt.ok{border-color:var(--ok);background:var(--ok-soft)}
 .opt.no{border-color:var(--pom);background:var(--bad-soft)}
 .opt.pick{border-color:var(--teal);background:var(--teal-soft)}
 .opt:disabled{cursor:default}
-.ex{margin-top:10px;padding:12px 14px;border-radius:10px;background:var(--teal-soft)}
-.btn{font-family:Oswald,sans-serif;font-size:19px;border:0;border-radius:12px;padding:12px 20px;background:var(--pom);color:#fff;cursor:pointer;margin-top:14px}
-.btn.ghost{background:transparent;color:var(--pom);border:2px solid var(--pom)}
+.opt .meta{font-weight:500}
+.ex{margin-top:12px;padding:14px 16px;border-radius:16px;background:var(--surface2);font-size:15px}
+.btn{font-size:14px;font-weight:600;letter-spacing:.2px;border:0;border-radius:14px;padding:14px 20px;background:var(--pom);color:#fff;cursor:pointer;margin-top:14px}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
 .row{display:flex;gap:10px;flex-wrap:wrap}
-.big{font-size:64px;line-height:1;color:var(--pom);margin:20px 0 4px}
-.mist{border-top:1px solid var(--line);padding:10px 0}
+.big{font-size:56px;font-weight:600;line-height:1;color:var(--pom);margin:28px 0 8px;letter-spacing:-1px}
+.mist{border-top:1px solid var(--line);padding:12px 0;font-size:15px}
 .mist .yours{color:var(--pom)}
 .mist .right{color:var(--ok)}
+
 /* ---------- нижняя панель (плавающая, как в Magic Farm) ---------- */
 nav.tabs{position:fixed;left:0;right:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;padding:0 12px;z-index:5;pointer-events:none}
 nav.tabs .in{--n:3;--i:0;position:relative;display:flex;width:100%;max-width:520px;padding:6px;border-radius:24px;
@@ -123,7 +188,6 @@ nav.tabs .pill{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 
 @keyframes dockIn{from{opacity:0;transform:translateY(30px) scale(.96)}}
 
 /* ---------- полный экран Telegram: отступ под часы/вырез ---------- */
-header.top{padding-top:calc(22px + var(--tg-safe-top,0px))}
 
 /* ---------- анимации: всё, что вставляется заново, плавно выезжает ---------- */
 @keyframes rise{from{opacity:0;transform:translateY(12px)}}
@@ -149,53 +213,51 @@ header.top{padding-top:calc(22px + var(--tg-safe-top,0px))}
 .ava{width:104px;height:104px;margin:0 auto;border-radius:24px;padding:3px;background:linear-gradient(135deg,var(--pom),var(--teal));
   box-shadow:0 10px 28px rgba(0,0,0,.25);animation:avaIn .6s cubic-bezier(.2,.9,.3,1.25) both}
 .ava img,.ava span{width:100%;height:100%;border-radius:21px;display:grid;place-items:center;object-fit:cover;
-  background:var(--paper);font:600 38px Oswald,sans-serif;color:var(--pom)}
+  background:var(--paper);font:600 38px var(--head);color:var(--pom)}
 @keyframes avaIn{from{opacity:0;transform:scale(.8) rotate(-4deg)}}
-.pname{margin:12px 0 8px;font-size:26px}
+.pname{margin:14px 0 10px;font-size:22px}
 .pchips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
-.pchip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);
-  background:var(--paper);font-size:14px;font-weight:700}
-.cheat{margin:16px 0 4px;padding:14px;border-radius:18px;border:1px solid var(--line);background:color-mix(in srgb,var(--teal-soft) 55%,var(--paper))}
-.cheat label{display:flex;align-items:center;gap:8px;font:500 19px Oswald,sans-serif;color:var(--teal);margin-bottom:8px}
-.cheat input{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--paper);border:2px solid var(--line);
+.pchip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);font-size:13px;font-weight:700}
+.cheat{margin:18px 0 4px;padding:16px 18px}
+.cheat label{display:flex;align-items:center;gap:8px;font:600 12px var(--head);text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px}
+.cheat input{width:100%;font:500 16px var(--body);color:var(--ink);background:var(--surface2);border:1.5px solid transparent;
   border-radius:12px;padding:10px 12px 10px 38px;outline:none;transition:border-color .2s,box-shadow .2s;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23888' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='m13 13 4 4'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:12px 50%}
 .cheat input:focus{border-color:var(--teal);box-shadow:0 0 0 4px color-mix(in srgb,var(--teal) 18%,transparent)}
 .cheat .hint{font-size:14px;color:var(--muted);margin-top:8px}
 .cheat .hint button{font:inherit;color:var(--teal);background:none;border:0;padding:0 2px;cursor:pointer;text-decoration:underline dotted}
-.dish-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0 0;animation:rise .3s both}
+.dish-card{padding:14px 16px;margin:10px 0 0;box-shadow:none;animation:rise .3s both}
+.dish-card p{font-size:14px}
 .dish-card .hd{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .dish-card .hd b{font-size:18px}
-.dish-card .pr{font:500 15px Oswald,sans-serif;color:var(--teal);white-space:nowrap}
+.dish-card .pr{font:500 15px var(--head);color:var(--teal);white-space:nowrap}
 .dish-card p{margin:4px 0}
 .dish-card .tags{margin-top:6px}
-.next{position:relative;overflow:hidden;border-radius:18px;padding:16px;margin:14px 0;color:#fff;
+.next{position:relative;overflow:hidden;border-radius:var(--r);padding:18px;margin:14px 0;color:#fff;
   background:linear-gradient(135deg,var(--pom),#8E0B21);box-shadow:0 10px 24px rgba(200,16,46,.28)}
-.next .k{font-size:13px;letter-spacing:.6px;text-transform:uppercase;opacity:.85}
-.next h3{color:#fff;margin:4px 0 6px;font-size:22px}
-.next p{margin:0 0 12px;opacity:.95}
-.next .btn{background:#fff;color:var(--pom);margin:0}
+.next .k{font:600 11px var(--head);letter-spacing:.9px;text-transform:uppercase;opacity:.8}
+.next h3{color:#fff;margin:6px 0 6px;font-size:20px;text-transform:none;letter-spacing:-.2px}
+.next p{margin:0 0 14px;opacity:.92;font-size:15px}
+.next .btn{background:#fff;color:var(--pom);margin:0;flex:1;padding:13px 10px;font-size:12px}
+.next .row{flex-wrap:nowrap;gap:8px}
 .next.done{background:linear-gradient(135deg,var(--ok),#0F5A31);box-shadow:0 10px 24px rgba(30,123,70,.28)}
 .next.done .btn{color:var(--ok)}
-.topic{border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:10px 0}
+.topic{padding:16px 18px;margin:10px 0}
 .topic .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.topic .hd b{font-family:Oswald,sans-serif;font-weight:500;font-size:19px}
-.topic .why{font-size:15px;margin:6px 0 2px}
+.topic .hd b{font:600 15px var(--head)}
+.topic .why{font-size:14px;color:var(--muted);margin:8px 0 2px}
 .topic .acts{display:flex;gap:8px;margin-top:8px}
-.topic .acts .btn{margin:0;padding:8px 14px;font-size:16px}
+.topic .acts .btn{margin:0;padding:10px 16px;font-size:12px}
 .trend{font-size:13px;margin-left:6px}
 .trend.up{color:var(--ok)} .trend.down{color:var(--pom)}
-.mrow{padding:10px 0;border-bottom:1px solid var(--line)}
-.mrow .q{font-size:16px;font-weight:700;margin:0 0 2px}
+.mrow{padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.mrow .q{font:600 15px/1.4 var(--body);margin:0 0 4px}
 .mrow .right{color:var(--ok);font-size:15px}
-.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
-.stats3 div{background:var(--teal-soft);border-radius:12px;padding:10px;text-align:center}
-.stats3 b{display:block;font:600 22px Oswald,sans-serif;color:var(--teal)}
-.stats3 span{font-size:13px;color:var(--muted)}
 
 /* ---------- админка ---------- */
-.card{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:10px 0;cursor:pointer;box-shadow:0 2px 8px rgba(35,28,28,.05)}
+.card{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);padding:14px 16px;margin:10px 0;cursor:pointer}
 .card:hover{border-color:var(--teal)}
 .card .who{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .card .who b{font-size:18px}
@@ -221,8 +283,8 @@ header.top{padding-top:calc(22px + var(--tg-safe-top,0px))}
 <body>
 <div class="wrap">
   <header class="top">
-    <h1>Большая грузинская кухня</h1>
-    <p>Обучалка официанта: столы, обеды, сервис, вина и меню. Сначала учишь, потом тест по темам, потом экзамен.</p>
+    <span class="logo">БГК</span>
+    <h1>Большая грузинская кухня<span>Обучалка официанта</span></h1>
   </header>
   <main id="app"></main>
 </div>
@@ -488,6 +550,10 @@ const app=$("#app");
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// Блоки разметки: карточка с подписью, список, пары «ключ — значение»
+const blk=(t,body,tone="")=>`<div class="${tone||"blk"}">${t?`<div class="blk-t">${t}</div>`:""}${body}</div>`;
+const ul=a=>`<ul class="clean">${a.map(x=>`<li>${x}</li>`).join("")}</ul>`;
+const facts=a=>`<dl class="facts">${a.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
 
 function mapSVG(f,{quiz=false,hl=null}={}){
   const F=FLOORS[f];
@@ -509,33 +575,42 @@ function renderLearn(){
   app.querySelectorAll("[data-lt]").forEach(b=>b.onclick=()=>{learnTab=b.dataset.lt;store.set("bgk_learn",learnTab);renderLearn();window.scrollTo(0,0)});
   const el=$("#lt");
   if(learnTab==="Столы") learnMap(el);
-  if(learnTab==="Обеды") el.innerHTML=`<h2>Бизнес-обеды</h2><p class="lead">Будни 12:00–16:00, 450 ₽. В каждый: грузинский хлеб + чай или морс.<br>Формула: суп + горячее + салат/закуска.</p>`+
-    LUNCHES.map(l=>`<div class="lunch"><h3>Обед №${l.n}</h3><p class="lead">${l.hook}</p>${l.items.map(i=>`<div class="dish"><b>${i.name}</b>${i.d}<div class="tags">${i.tags.map(t=>`<span class="tag${(i.w||[]).includes(t)?" w":""}">${t}</span>`).join("")}</div></div>`).join("")}</div>`).join("")+
-    `<div class="note"><b>Быстрые ответы</b><br>Без свинины — только №4. Орехи — №2 и №4. Без яйца — №3 (тесто хинкали уточнить). Острое — №2 (салат, солянка) и №3 (хинкали, чили в супе).</div>`+
-    `<div class="warn"><b>Вегетарианцу:</b> про харчо с фасолью в Обеде №3 (мясо, бульон) — уточни на кухне, не обещай заранее.</div>`;
-  if(learnTab==="Сервис") el.innerHTML=`<h2>8 шагов сервиса</h2><table class="grid"><tr><th>Что</th><th>Срок</th></tr><tr><td>Поприветствовать</td><td>30 сек</td></tr><tr><td>Принять аперитив</td><td>1 мин</td></tr><tr><td>Принести аперитив и напитки</td><td>3 мин</td></tr><tr><td>Спросить про блюдо</td><td>через 3 мин</td></tr><tr><td>Рассчитать</td><td>1 мин</td></tr></table>`+
-    STEPS.map((s,i)=>`<div class="step"><div class="n">${i+1}</div><div><b>${s.t}</b><p>${s.d}</p></div></div>`).join("")+
-    `<div class="note"><b>Порядок обслуживания:</b> маленькие дети → женщины (от старшей) → мужчины (от старшего) → хозяин стола последним. Об оплате хозяин узнаёт первым.<br><br><b>Если не знаешь ответ:</b> «Хороший вопрос! Уточню у повара и вернусь» — и вернись.</div>`;
+  if(learnTab==="Обеды") el.innerHTML=`<h2>Бизнес-обеды</h2>`+
+    blk("",facts([["Когда","Будни 12:00–16:00"],["Цена","450 ₽"],["В каждый","Грузинский хлеб + чай или морс"],["Формула","Суп + горячее + салат/закуска"]]))+
+    LUNCHES.map(l=>`<div class="lunch"><h3>Обед №${l.n}</h3><div class="hook">${l.hook}</div>${l.items.map(i=>`<div class="dish"><b>${i.name}</b><div class="d">${i.d}</div><div class="tags">${i.tags.map(t=>`<span class="tag${(i.w||[]).includes(t)?" w":""}">${t}</span>`).join("")}</div></div>`).join("")}</div>`).join("")+
+    blk("Быстрые ответы",ul(["Без свинины — только №4","Орехи — №2 и №4","Без яйца — №3 (тесто хинкали уточнить)","Острое — №2 (салат, солянка) и №3 (хинкали, чили в супе)"]),"note")+
+    blk("Вегетарианцу","Про харчо с фасолью в Обеде №3 (мясо, бульон) — уточни на кухне, не обещай заранее.","warn");
+  if(learnTab==="Сервис") el.innerHTML=`<h2>8 шагов сервиса</h2><p class="lead">Сроки, которые проверяют:</p>
+    <div class="tiles">${[["30 сек","поприветствовать"],["1 мин","принять аперитив"],["3 мин","принести аперитив и напитки"],["3 мин","спросить про блюдо"],["1 мин","рассчитать"]].map(([a,b])=>`<div class="tile"><b>${a}</b><span>${b}</span></div>`).join("")}</div>
+    <div class="steps">${STEPS.map((s,i)=>`<div class="step"><div class="n">${i+1}</div><div><b>${s.t}</b><p>${s.d}</p></div></div>`).join("")}</div>`+
+    blk("Порядок обслуживания",ul(["Маленькие дети","Женщины (от старшей)","Мужчины (от старшего)","Хозяин стола последним — об оплате узнаёт первым"]),"note")+
+    blk("Если не знаешь ответ","«Хороший вопрос! Уточню у повара и вернусь» — и вернись.");
   if(learnTab==="Вина") learnWine(el);
-  if(learnTab==="Меню") el.innerHTML=`<h2>Словарь меню</h2><div class="note"><b>Цены основного меню.</b> Все блюда — 290 ₽ в будни до 18:00; 350 ₽ в будни после 18:00, весь день в сб, вс и праздники. Кроме PRIME (450–650 ₽). Гарниры — 200 ₽, соус 50 г — 110 ₽, лепёшка — 50 ₽. Обеды — будни 12:00–16:00, 450 ₽.<br><b>Соусы:</b> аджика, ткемали, сацибели, сметана, мацони, тартар, наршараб, кетчуп.</div><p class="lead">Отвечай гостю по формуле: основа + как готовят + с чем подают.</p><div class="note">Красное с курицей — чахохбили. Белое с курицей — чкмерули. Красное острое с говядиной — чашушули. Говядина с овощами — чанахи. Жареное с картошкой — оджахури.</div>`+
-    DICT.map(([k,v])=>`<div class="dict"><b>${k}</b> — ${v}</div>`).join("");
+  if(learnTab==="Меню") el.innerHTML=`<h2>Словарь меню</h2>`+
+    blk("Цены основного меню",facts([["Будни до 18:00","290 ₽ — все блюда"],["После 18:00, сб, вс, праздники","350 ₽"],["PRIME","450–650 ₽"],["Гарниры","200 ₽"],["Соус 50 г","110 ₽"],["Лепёшка","50 ₽"],["Обеды","Будни 12:00–16:00, 450 ₽"]]))+
+    blk("Соусы",`<div class="saucelist">${["аджика","ткемали","сацибели","сметана","мацони","тартар","наршараб","кетчуп"].map(t=>`<span class="tag">${t}</span>`).join("")}</div>`)+
+    blk("Как отвечать гостю","Основа + как готовят + с чем подают.","note")+
+    blk("Чтобы не путать",ul(["Красное с курицей — чахохбили","Белое с курицей — чкмерули","Красное острое с говядиной — чашушули","Говядина с овощами — чанахи","Жареное с картошкой — оджахури"]))+
+    `<div class="blk">${DICT.map(([k,v])=>`<div class="dict"><b>${k}</b><span>${v}</span></div>`).join("")}</div>`;
 }
 function learnMap(el){
   el.innerHTML=`<h2>Расположение столов</h2><p class="lead">Нажми на стол — увидишь подсказку.</p>
   <div class="floorsel"><button class="chip" aria-pressed="${floor===1}" data-f="1">1 этаж</button><button class="chip" aria-pressed="${floor===2}" data-f="2">2 этаж</button></div>
   <div class="mapbox" id="mb">${mapSVG(floor)}</div><div class="mapinfo" id="mi">${floor===1?"Вход справа внизу. Касса и бар — сверху.":"Маршрут: 40→42 вверх по левой стене, 43–44 по верху, 45–46 у кончика овала, 47→51 по низу справа налево."}</div>
-  <div class="note">${floor===1?"<b>1 этаж:</b> у входа 10, по правой стене вверх 11, 14, 12 (13 нет). Центр — круглые 15–18. У кассы 19. Нижний ряд: лестница → 20, 21, 22 → гардероб. Дальний зал 31–37: сверху круглые 31, 32, 33 (справа налево), слева 34 и туалет (WC), снизу 35, 36, 37.":"<b>2 этаж:</b> номера идут подряд по кругу против часовой стрелки от левого нижнего угла (40, у лестницы) до 51. 48 — маленький, у овала, над 49."}</div>`;
+  ${floor===1?blk("Как запомнить 1 этаж",ul(["У входа — 10","По правой стене вверх — 11, 14, 12 (13 нет)","Центр — круглые 15–18","У кассы — 19","Нижний ряд: лестница → 20, 21, 22 → гардероб","Дальний зал 31–37: сверху круглые 31, 32, 33 (справа налево), слева 34 и туалет (WC), снизу 35, 36, 37"])):
+     blk("Как запомнить 2 этаж",ul(["Номера идут подряд по кругу против часовой стрелки","От левого нижнего угла (40, у лестницы) до 51","48 — маленький, у овала, над 49"]))}`;
   el.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{floor=+b.dataset.f;learnMap(el)});
   const pick=n=>{el.querySelectorAll(".t").forEach(g=>g.classList.toggle("hl",+g.dataset.n===n));$("#mi").innerHTML=`<b>Стол ${n}.</b> ${TABLE_NOTES[n]||""}`};
   el.querySelectorAll(".t").forEach(g=>{g.onclick=()=>pick(+g.dataset.n);g.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(+g.dataset.n)}}});
 }
 function learnWine(el){
   const cats=["Белое","Красное","Розовое","Игристое"];
-  el.innerHTML=`<h2>Вина</h2><p class="lead">Цены — за бокал 125 мл. Для каждого вина главное: цвет, сладость, страна и фраза для гостя.</p>
-  <div class="note"><b>Основы.</b> Белое: сок сразу отделяют от кожицы — светлое, свежее, к рыбе и салатам. Красное: бродит с кожицей — цвет и танины (терпкость), к мясу и грилю. Розовое: красный виноград, кожица всего несколько часов — лёгкое, ягодное, универсальное. Игристое: вторичное брожение даёт пузырьки — аперитив.<br><br><b>Сладость:</b> сухое → полусухое → полусладкое → сладкое. Фруктовый аромат ≠ сладость.<br><b>Игристые:</b> Brut Nature → Extra Brut → Brut → Extra Dry → Sec → Demi-Sec → Doux. Extra Dry слаще, чем Brut.</div>
-  <div class="note"><b>Грузинская пятёрка:</b> Цинандали (белое сухое), Алазанская долина (белое и красное, полусладкие), Саперави (красное сухое), Киндзмараули (красное полусладкое), Асканели (игристое брют).</div>`+
-  cats.map(c=>`<h3>${c}</h3>`+WINES.filter(w=>w.cat===c).map(w=>`<div class="wine"><div class="head"><b>${w.name}</b><span class="price">${w.price} ₽</span></div><div class="meta">${w.style}, ${w.country}</div><div>${w.taste}</div><div class="pitch">«Если хочется: ${w.pitch.charAt(0).toLowerCase()+w.pitch.slice(1)}»</div><div class="meta">К чему: ${w.pair}</div></div>`).join("")).join("")+
-  `<div class="warn">Помни: к рыбе и салатам — белое, к мясу — красное. Вино предлагаешь при основном заказе, бутылку — исходя из горячего.</div>`;
+  el.innerHTML=`<h2>Вина</h2><p class="lead">Цены — за бокал 125 мл. Для каждого вина главное: цвет, сладость, страна и фраза для гостя.</p>`+
+  blk("Основы",facts([["Белое","Сок сразу отделяют от кожицы — светлое, свежее, к рыбе и салатам"],["Красное","Бродит с кожицей — цвет и танины (терпкость), к мясу и грилю"],["Розовое","Красный виноград, кожица всего несколько часов — лёгкое, ягодное, универсальное"],["Игристое","Вторичное брожение даёт пузырьки — аперитив"]]))+
+  blk("Сладость",ul(["Сухое → полусухое → полусладкое → сладкое","Фруктовый аромат ≠ сладость","Игристые: Brut Nature → Extra Brut → Brut → Extra Dry → Sec → Demi-Sec → Doux","Extra Dry слаще, чем Brut"]),"note")+
+  blk("Грузинская пятёрка",ul(["Цинандали — белое сухое","Алазанская долина — белое и красное, полусладкие","Саперави — красное сухое","Киндзмараули — красное полусладкое","Асканели — игристое брют"]))+
+  cats.map(c=>`<h3>${c}</h3>`+WINES.filter(w=>w.cat===c).map(w=>`<div class="wine"><div class="head"><b>${w.name}</b><span class="price">${w.price} ₽</span></div><div class="meta">${w.style} · ${w.country}</div><div class="taste">${w.taste}</div><div class="pitch">«Если хочется: ${w.pitch.charAt(0).toLowerCase()+w.pitch.slice(1)}»</div><div class="pair"><b>К чему:</b> ${w.pair}</div></div>`).join("")).join("")+
+  blk("Помни","К рыбе и салатам — белое, к мясу — красное. Вино предлагаешь при основном заказе, бутылку — исходя из горячего.","warn");
 }
 
 /* ===================== QUIZ ENGINE ===================== */
