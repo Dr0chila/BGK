@@ -70,6 +70,33 @@ async def setup_commands(bot: Bot, session: AsyncSession) -> None:
         await sync_commands(bot, a)
 
 
+async def decide_application(bot: Bot, session: AsyncSession, tg_id: int, approve: bool,
+                             by: User) -> str | None:
+    """Принять/отклонить заявку — общее для кнопок в боте и админки в мини-аппе.
+    None — заявки уже нет (разобрал другой админ)."""
+    target = await session.get(User, tg_id)
+    if target is None or target.status != "pending":
+        return None
+    if approve:
+        target.status = "active"
+        await session.commit()
+        try:
+            await enable_webapp(bot, tg_id)
+            await bot.send_message(tg_id, "Доступ открыт! Жми кнопку ниже.", reply_markup=webapp_kb())
+        except Exception:
+            pass
+        return f"✅ Принят: {who(target)} — решил(а) {who(by)}"
+    # удаляем, чтобы человек мог подать заявку заново (например, с правильным именем)
+    text = f"❌ Отклонён: {who(target)} — решил(а) {who(by)}"
+    await session.delete(target)
+    await session.commit()
+    try:
+        await bot.send_message(tg_id, "Заявка отклонена. Если это ошибка — напиши управляющему.")
+    except Exception:
+        pass
+    return text
+
+
 async def ensure_owner(session: AsyncSession) -> None:
     owner = await session.get(User, settings.owner_id)
     if owner is None:

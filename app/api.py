@@ -5,6 +5,7 @@ from aiogram import Bot
 from aiogram.utils.web_app import safe_parse_webapp_init_data
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field, model_validator
+from sqlalchemy import select
 
 from app import services as s
 from app.config import settings
@@ -79,4 +80,70 @@ async def results(body: Result, request: Request, uid: int = Depends(tg_user_id)
             bot: Bot = request.app.state.bot
             await s.notify_admins(bot, session,
                                   f"🎓 {s.who(u)} сдал(а) экзамен: {body.score}/{body.total} ({body.pct}%)")
+    return {"ok": True}
+
+
+# ---------------- админка мини-аппа ----------------
+
+async def admin_id(uid: int = Depends(tg_user_id)) -> int:
+    async with Session() as session:
+        u = await session.get(User, uid)
+    if u is None or not u.is_admin:
+        raise HTTPException(403, "admins only")
+    return uid
+
+
+def _iso(d):
+    return d.isoformat() if d else None
+
+
+@router.get("/admin/trainees")
+async def admin_trainees(_: int = Depends(admin_id)):
+    async with Session() as session:
+        rows = await session.scalars(
+            select(User).where(User.role == "trainee", User.status == "active").order_by(User.full_name))
+        out = []
+        for u in rows:
+            p = await s.progress(session, u.tg_id)
+            out.append({"id": u.tg_id, "name": u.full_name, "username": u.username,
+                        "topics": p["topics"], "exam": p["exam"], "exams": p["exams"], "last": _iso(p["last"])})
+    return {"topics": list(settings.topics), "pass": settings.exam_pass_pct, "items": out}
+
+
+@router.get("/admin/trainees/{tg_id}")
+async def admin_trainee(tg_id: int, _: int = Depends(admin_id)):
+    async with Session() as session:
+        u = await session.get(User, tg_id)
+        if u is None:
+            raise HTTPException(404)
+        p = await s.progress(session, tg_id)
+        last = await session.scalars(
+            select(Attempt).where(Attempt.user_id == tg_id).order_by(Attempt.created_at.desc()).limit(10))
+        attempts = [{"mode": a.mode, "topic": a.topic, "score": a.score, "total": a.total,
+                     "pct": a.pct, "at": _iso(a.created_at)} for a in last]
+        top = await s.top_mistakes(session, tg_id)
+    return {"id": u.tg_id, "name": u.full_name, "username": u.username, "topics": p["topics"],
+            "exam": p["exam"], "exams": p["exams"], "last": _iso(p["last"]), "attempts": attempts,
+            "mistakes": [{"q": q, "n": n} for q, n in top]}
+
+
+@router.get("/admin/pending")
+async def admin_pending(_: int = Depends(admin_id)):
+    async with Session() as session:
+        rows = await session.scalars(select(User).where(User.status == "pending").order_by(User.created_at))
+        return {"items": [{"id": u.tg_id, "name": u.full_name, "username": u.username,
+                           "at": _iso(u.created_at)} for u in rows]}
+
+
+class Decision(BaseModel):
+    approve: bool
+
+
+@router.post("/admin/pending/{tg_id}")
+async def admin_decide(tg_id: int, body: Decision, request: Request, uid: int = Depends(admin_id)):
+    async with Session() as session:
+        by = await session.get(User, uid)
+        text = await s.decide_application(request.app.state.bot, session, tg_id, body.approve, by)
+    if text is None:
+        raise HTTPException(409, "already decided")
     return {"ok": True}

@@ -51,30 +51,12 @@ async def pending(m: Message, session: AsyncSession) -> None:
 @admin.callback_query(F.data.startswith("reg:"))
 async def decide(c: CallbackQuery, bot: Bot, session: AsyncSession, user: User) -> None:
     _, action, raw_id = c.data.split(":")
-    target = await session.get(User, int(raw_id))
-    if target is None or target.status != "pending":
+    text = await s.decide_application(bot, session, int(raw_id), action == "ok", user)
+    if text is None:
         await c.answer("Заявку уже разобрали.", show_alert=True)
         await c.message.edit_reply_markup(reply_markup=None)
         return
-    if action == "ok":
-        target.status = "active"
-        await session.commit()
-        await c.message.edit_text(f"✅ Принят: {s.who(target)} — решил(а) {s.who(user)}")
-        try:
-            await s.enable_webapp(bot, target.tg_id)
-            await bot.send_message(target.tg_id, "Доступ открыт! Жми кнопку ниже.", reply_markup=s.webapp_kb())
-        except Exception:
-            pass
-    else:
-        # удаляем, чтобы человек мог подать заявку заново (например, с правильным именем)
-        text = f"❌ Отклонён: {s.who(target)} — решил(а) {s.who(user)}"
-        await session.delete(target)
-        await session.commit()
-        await c.message.edit_text(text)
-        try:
-            await bot.send_message(int(raw_id), "Заявка отклонена. Если это ошибка — напиши управляющему.")
-        except Exception:
-            pass
+    await c.message.edit_text(text)
     await c.answer()
 
 

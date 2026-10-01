@@ -105,12 +105,65 @@ svg.map .t:focus-visible .s{stroke:var(--teal);stroke-width:5}
 .mist{border-top:1px solid var(--line);padding:10px 0}
 .mist .yours{color:var(--pom)}
 .mist .right{color:var(--ok)}
-/* bottom tabs */
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
-nav.tabs .in{display:flex;max-width:720px;width:100%}
-.tab{flex:1;background:none;border:0;padding:12px 4px 14px;font-size:19px;color:var(--muted);cursor:pointer;border-top:4px solid transparent}
-.tab[aria-current="page"]{color:var(--pom);border-top-color:var(--pom)}
-@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+/* ---------- нижняя панель (плавающая, как в Magic Farm) ---------- */
+nav.tabs{position:fixed;left:0;right:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;padding:0 12px;z-index:5;pointer-events:none}
+nav.tabs .in{--n:3;--i:0;position:relative;display:flex;width:100%;max-width:520px;padding:6px;border-radius:24px;
+  background:color-mix(in srgb,var(--paper) 86%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border:1px solid var(--line);box-shadow:0 10px 30px rgba(35,28,28,.18),0 2px 6px rgba(35,28,28,.08);pointer-events:auto;
+  animation:dockIn .5s cubic-bezier(.2,.9,.3,1.2) both}
+nav.tabs .pill{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/var(--n));border-radius:18px;background:var(--pom-soft);
+  transform:translateX(calc(var(--i)*100%));transition:transform .38s cubic-bezier(.3,1.3,.5,1)}
+.tab{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:0;padding:6px 2px 5px;color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color .25s}
+.tab .ico{font-size:22px;line-height:1.1;transition:transform .35s cubic-bezier(.3,1.5,.5,1)}
+.tab .lbl{font-size:13px;letter-spacing:.3px}
+.tab[aria-current="page"]{color:var(--pom)}
+.tab[aria-current="page"] .ico{transform:translateY(-2px) scale(1.18)}
+.tab:active .ico{transform:scale(.88)}
+.tab[hidden]{display:none}
+@keyframes dockIn{from{opacity:0;transform:translateY(30px) scale(.96)}}
+
+/* ---------- полный экран Telegram: отступ под часы/вырез ---------- */
+header.top{padding-top:calc(22px + var(--tg-safe-top,0px))}
+
+/* ---------- анимации: всё, что вставляется заново, плавно выезжает ---------- */
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.035)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+@keyframes grow{from{transform:scaleX(0)}}
+#app>*,#lt>*,.qcard>*,#fb>*,#ad>*{animation:rise .42s cubic-bezier(.2,.8,.2,1) both}
+#lt>*:nth-child(2),.qcard>*:nth-child(2),#ad>*:nth-child(2){animation-delay:.04s}
+#lt>*:nth-child(3),.qcard>*:nth-child(3),#ad>*:nth-child(3){animation-delay:.08s}
+#lt>*:nth-child(4),.qcard>*:nth-child(4),#ad>*:nth-child(4){animation-delay:.12s}
+#lt>*:nth-child(5),.qcard>*:nth-child(5),#ad>*:nth-child(5){animation-delay:.16s}
+#lt>*:nth-child(6),.qcard>*:nth-child(6),#ad>*:nth-child(6){animation-delay:.2s}
+#lt>*:nth-child(n+7),.qcard>*:nth-child(n+7),#ad>*:nth-child(n+7){animation-delay:.24s}
+.opt,.btn,.chip,.card{transition:transform .18s ease,background-color .25s,border-color .25s,box-shadow .25s}
+.opt:active,.btn:active,.chip:active,.card:active{transform:scale(.97)}
+.opt.ok{animation:pop .45s ease}
+.opt.no{animation:shake .45s ease}
+.big{display:inline-block;animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+
+/* ---------- админка ---------- */
+.card{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:10px 0;cursor:pointer;box-shadow:0 2px 8px rgba(35,28,28,.05)}
+.card:hover{border-color:var(--teal)}
+.card .who{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.card .who b{font-size:18px}
+.meta{color:var(--muted);font-size:14px}
+.prog{display:grid;grid-template-columns:62px 1fr 42px;gap:8px;align-items:center;font-size:14px;margin:5px 0}
+.prog .tr{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.prog .tr i{display:block;height:100%;border-radius:4px;background:var(--teal);transform-origin:left;animation:grow .7s cubic-bezier(.2,.8,.2,1) both}
+.prog .tr i.pass{background:var(--ok)}
+.prog .v{text-align:right;color:var(--muted)}
+.badge{display:inline-block;font-size:13px;padding:2px 9px;border-radius:999px;background:var(--teal-soft);color:var(--teal)}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}
+.badge.no{background:var(--pom-soft);color:var(--pom)}
+.empty{text-align:center;color:var(--muted);padding:30px 0}
+.skel{height:84px;border-radius:16px;margin:10px 0;background:linear-gradient(90deg,var(--line) 0%,var(--paper) 50%,var(--line) 100%);background-size:200% 100%;animation:shim 1.2s linear infinite;opacity:.6}
+@keyframes shim{to{background-position:-200% 0}}
+.back{background:none;border:0;color:var(--teal);font:inherit;cursor:pointer;padding:8px 0}
+.att{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -122,14 +175,43 @@ nav.tabs .in{display:flex;max-width:720px;width:100%}
   </header>
   <main id="app"></main>
 </div>
-<nav class="tabs"><div class="in">
-  <button class="tab" data-v="learn">Учить</button>
-  <button class="tab" data-v="test">Тест</button>
-  <button class="tab" data-v="exam">Экзамен</button>
+<nav class="tabs"><div class="in"><span class="pill" aria-hidden="true"></span>
+  <button class="tab" data-v="learn"><span class="ico">📚</span><span class="lbl">Учить</span></button>
+  <button class="tab" data-v="test"><span class="ico">✏️</span><span class="lbl">Тест</span></button>
+  <button class="tab" data-v="exam"><span class="ico">🎓</span><span class="lbl">Экзамен</span></button>
+  <button class="tab" data-v="admin" hidden><span class="ico">🛠️</span><span class="lbl">Админ</span></button>
 </div></nav>
 
 <script>
-const TG=window.Telegram?.WebApp; if(TG&&TG.initData){TG.ready();TG.expand();if(TG.colorScheme)document.documentElement.dataset.theme=TG.colorScheme;}
+/* ===================== TELEGRAM ===================== */
+// Полный экран — как в dropbot/web/js/tg-viewport.js: на телефоне requestFullscreen,
+// на десктопе нет (там фуллскрин растягивает окно на весь монитор и перекрывает Telegram).
+const TG=window.Telegram?.WebApp?.initData ? window.Telegram.WebApp : null;
+if(TG){
+  try{
+    TG.ready();
+    if(TG.colorScheme) document.documentElement.dataset.theme=TG.colorScheme;
+    const mobile=!["tdesktop","macos","weba","webk","web","unknown"].includes((TG.platform||"unknown").toLowerCase());
+    if(mobile){
+      TG.expand();
+      if(typeof TG.requestFullscreen==="function") TG.requestFullscreen();
+      // свайп вниз внутри обучалки — это прокрутка, а не закрытие
+      if(typeof TG.disableVerticalSwipes==="function") TG.disableVerticalSwipes();
+    } else if(TG.isFullscreen && typeof TG.exitFullscreen==="function") TG.exitFullscreen();
+    const setInset=()=>{
+      const top=(TG.isFullscreen&&TG.safeAreaInset?.top)||0, cont=TG.contentSafeAreaInset?.top||0;
+      document.documentElement.style.setProperty("--tg-safe-top",(top+cont)+"px");
+    };
+    setInset();
+    ["fullscreenChanged","safeAreaChanged","contentSafeAreaChanged"].forEach(e=>TG.onEvent?.(e,setInset));
+  }catch(e){}
+}
+const haptic=t=>{try{t==="ok"||t==="no"?TG?.HapticFeedback?.notificationOccurred(t==="ok"?"success":"error"):TG?.HapticFeedback?.selectionChanged()}catch(e){}};
+async function api(path,opt={}){
+  const r=await fetch(path,{...opt,headers:{"Content-Type":"application/json","X-Init-Data":TG?.initData||"",...(opt.headers||{})}});
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
 /* ===================== DATA ===================== */
 const FLOORS = {
   1:{ vb:"0 0 920 315",
@@ -440,7 +522,7 @@ function bindNext(){ $("#nx").onclick=()=>{ if(run.i<run.qs.length-1){run.i++;ru
 function answerMC(k){
   if(run.locked) return; run.locked=true;
   const q=run.qs[run.i], ok=k===q.ans;
-  run.answers.push({q,ok,given:q.opts[k]});
+  run.answers.push({q,ok,given:q.opts[k]}); haptic(run.mode==="test"?(ok?"ok":"no"):"tap");
   const btns=app.querySelectorAll(".opt"); btns.forEach(b=>b.disabled=true);
   if(run.mode==="test"){
     btns[q.ans].classList.add("ok"); if(!ok) btns[k].classList.add("no");
@@ -451,7 +533,7 @@ function answerMC(k){
 function answerMap(n){
   if(run.locked) return; run.locked=true;
   const q=run.qs[run.i], ok=n===q.target;
-  run.answers.push({q,ok,given:"стол "+n});
+  run.answers.push({q,ok,given:"стол "+n}); haptic(run.mode==="test"?(ok?"ok":"no"):"tap");
   const svg=app.querySelector("svg.map");
   const g=svg.querySelector(`.t[data-n="${n}"]`), gt=svg.querySelector(`.t[data-n="${q.target}"]`);
   if(run.mode==="test"){
@@ -479,6 +561,7 @@ function finish(){
    (wrong.length?`<h3>Разбор ошибок</h3>`+wrong.map(a=>{
      const corr=a.q.t==="mc"?a.q.right:`стол ${a.q.target} — ${TABLE_NOTES[a.q.target]||""}`;
      return `<div class="mist"><b>${esc(a.q.q)}</b><br><span class="yours">Твой ответ: ${esc(a.given)}</span><br><span class="right">Правильно: ${esc(corr)}</span>${a.q.ex?`<br><span class="meta">${esc(a.q.ex)}</span>`:""}</div>`}).join(""):"");
+  countUp(app.querySelector(".big"),pct);
   $("#again").onclick=()=>startRun(r.mode,r.cat);
   $("#back").onclick=()=>{run=null;go(r.mode)};
   window.scrollTo(0,0);
@@ -500,15 +583,100 @@ const _finish=finish;
 finish=function(){ if(run&&run.mode==="test"){const r=run,res=store.get("bgk_tests",{});res[r.cat]=Math.round(r.answers.filter(a=>a.ok).length/r.answers.length*100);store.set("bgk_tests",res)} _finish(); };
 
 /* ===================== NAV ===================== */
-function go(v){
-  document.querySelectorAll(".tab").forEach(t=>t.toggleAttribute("aria-current",t.dataset.v===v)||t.setAttribute("aria-current",t.dataset.v===v?"page":"false"));
-  document.querySelectorAll(".tab").forEach(t=>t.dataset.v===v?t.setAttribute("aria-current","page"):t.removeAttribute("aria-current"));
-  run=null;
-  if(v==="learn") renderLearn(); if(v==="test") renderTestMenu(); if(v==="exam") renderExamMenu();
-  window.scrollTo(0,0);
+function countUp(el,to){
+  if(!el||matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const t0=performance.now(),d=700;
+  const f=t=>{const k=Math.min(1,(t-t0)/d);el.textContent=Math.round(to*(1-Math.pow(1-k,3)))+"%";if(k<1)requestAnimationFrame(f)};
+  requestAnimationFrame(f);
 }
-document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>go(t.dataset.v));
+// Подсветка-«пилюля» под активной вкладкой ездит по --i, ширина делится на --n видимых вкладок
+function placePill(v){
+  const tabs=[...document.querySelectorAll(".tab")].filter(t=>!t.hidden);
+  tabs.forEach(t=>t.dataset.v===v?t.setAttribute("aria-current","page"):t.removeAttribute("aria-current"));
+  const dock=document.querySelector("nav.tabs .in");
+  dock.style.setProperty("--n",tabs.length);
+  dock.style.setProperty("--i",Math.max(0,tabs.findIndex(t=>t.dataset.v===v)));
+}
+function go(v){
+  placePill(v);
+  run=null;
+  if(v==="learn") renderLearn(); if(v==="test") renderTestMenu(); if(v==="exam") renderExamMenu(); if(v==="admin") renderAdmin();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{haptic("tap");go(t.dataset.v)});
 go("learn");
+
+/* ===================== ADMIN ===================== */
+// Вкладка видна только админам: роль берём с сервера по подписанному initData.
+// Сервер всё равно проверяет роль на каждом /api/admin/* — скрытая кнопка не защита, а удобство.
+if(TG) api("/api/me").then(me=>{
+  if(me.registered&&me.status==="active"&&(me.role==="admin"||me.role==="owner")){
+    document.querySelector('.tab[data-v="admin"]').hidden=false;
+    placePill(document.querySelector('.tab[aria-current="page"]')?.dataset.v||"learn");
+  }
+}).catch(()=>{});
+
+let adminTab="trainees";
+const fmtDate=iso=>iso?new Date(iso).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"—";
+const pctBadge=(v,pass)=>v==null?`<span class="badge">—</span>`:`<span class="badge ${v>=pass?"ok":""}">${v}%</span>`;
+const progRow=(name,v,pass)=>`<div class="prog"><span>${esc(name)}</span><span class="tr"><i class="${v>=pass?"pass":""}" style="width:${v||0}%"></i></span><span class="v">${v==null?"—":v+"%"}</span></div>`;
+const skel=n=>Array.from({length:n},()=>`<div class="skel"></div>`).join("");
+const empty=t=>`<div class="empty">${t}</div>`;
+
+function renderAdmin(){
+  app.innerHTML=`<div class="chips" role="tablist">
+    <button class="chip" aria-pressed="${adminTab==="trainees"}" data-at="trainees">Стажёры</button>
+    <button class="chip" aria-pressed="${adminTab==="pending"}" data-at="pending">Заявки</button></div><section id="ad"></section>`;
+  app.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{haptic("tap");adminTab=b.dataset.at;renderAdmin()});
+  adminTab==="trainees"?adminTrainees():adminPending();
+}
+async function adminTrainees(){
+  const el=$("#ad"); el.innerHTML=skel(3);
+  try{
+    const d=await api("/api/admin/trainees");
+    if(!d.items.length){el.innerHTML=empty("Активных стажёров пока нет");return}
+    el.innerHTML=`<p class="lead">Всего: ${d.items.length}. Нажми на стажёра — попытки и частые ошибки.</p>`+d.items.map(u=>`
+      <button class="card" data-id="${u.id}">
+        <div class="who"><b>${esc(u.name)}</b>${pctBadge(u.exam,d.pass)}</div>
+        <div class="meta">${u.username?"@"+esc(u.username)+" · ":""}был(а): ${fmtDate(u.last)}</div>
+        ${d.topics.map(t=>progRow(t,u.topics[t],d.pass)).join("")}
+      </button>`).join("");
+    el.querySelectorAll(".card").forEach(c=>c.onclick=()=>{haptic("tap");adminTrainee(+c.dataset.id,d)});
+  }catch(e){el.innerHTML=`<div class="warn">Не удалось загрузить. Проверь интернет и открой обучалку заново.</div>`}
+}
+async function adminTrainee(id,list){
+  const el=$("#ad"); el.innerHTML=skel(2); window.scrollTo({top:0,behavior:"smooth"});
+  try{
+    const u=await api("/api/admin/trainees/"+id);
+    el.innerHTML=`<button class="back" id="bk">← Все стажёры</button>
+      <h2>${esc(u.name)}</h2><div class="meta">${u.username?"@"+esc(u.username)+" · ":""}был(а): ${fmtDate(u.last)}</div>
+      <div class="note">${list.topics.map(t=>progRow(t,u.topics[t],list.pass)).join("")}${progRow("Экзамен",u.exam,list.pass)}${u.exams?`<div class="meta">Попыток экзамена: ${u.exams}</div>`:""}</div>
+      <h3>Последние попытки</h3>${u.attempts.length?u.attempts.map(a=>`<div class="att"><span>${a.mode==="exam"?"🎓 Экзамен":esc(a.topic)} · ${a.score}/${a.total}</span><span>${pctBadge(a.pct,list.pass)} <span class="meta">${fmtDate(a.at)}</span></span></div>`).join(""):empty("Попыток нет")}
+      <h3>Частые ошибки</h3>${u.mistakes.length?u.mistakes.map(m=>`<div class="att"><span>${esc(m.q)}</span><span class="badge no">${m.n}×</span></div>`).join(""):empty("Ошибок нет")}`;
+    $("#bk").onclick=()=>{haptic("tap");adminTrainees()};
+  }catch(e){el.innerHTML=`<div class="warn">Не удалось загрузить стажёра.</div>`}
+}
+async function adminPending(){
+  const el=$("#ad"); el.innerHTML=skel(2);
+  const none=()=>empty("Новых заявок нет 🎉");
+  try{
+    const d=await api("/api/admin/pending");
+    if(!d.items.length){el.innerHTML=none();return}
+    el.innerHTML=d.items.map(u=>`<div class="card" data-id="${u.id}" style="cursor:default">
+      <div class="who"><b>${esc(u.name)}</b><span class="meta">${fmtDate(u.at)}</span></div>
+      <div class="meta">${u.username?"@"+esc(u.username):"без username"}</div>
+      <div class="row"><button class="btn" data-ok="1">Принять</button><button class="btn ghost" data-ok="0">Отклонить</button></div></div>`).join("");
+    el.querySelectorAll("[data-ok]").forEach(b=>b.onclick=async()=>{
+      const card=b.closest(".card"), ok=b.dataset.ok==="1";
+      card.querySelectorAll("button").forEach(x=>x.disabled=true);
+      // 409 — заявку уже разобрал другой админ: карточку всё равно убираем
+      try{await api("/api/admin/pending/"+card.dataset.id,{method:"POST",body:JSON.stringify({approve:ok})});haptic("ok")}
+      catch(e){if(e.message!=="409"){haptic("no");card.querySelectorAll("button").forEach(x=>x.disabled=false);return}}
+      card.style.transition="opacity .3s,transform .3s"; card.style.opacity="0"; card.style.transform=`translateX(${ok?40:-40}px)`;
+      setTimeout(()=>{card.remove();if(!el.querySelector(".card"))el.innerHTML=none()},300);
+    });
+  }catch(e){el.innerHTML=`<div class="warn">Не удалось загрузить заявки.</div>`}
+}
 </script>
 </body>
 </html>
