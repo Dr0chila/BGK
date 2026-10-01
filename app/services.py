@@ -43,6 +43,7 @@ ADMIN_CMDS = TRAINEE_CMDS + [
     BotCommand(command="stats", description="Стажёры и прогресс"),
     BotCommand(command="trainee", description="Подробно по стажёру: /trainee @ник"),
     BotCommand(command="pending", description="Заявки на доступ"),
+    BotCommand(command="delete", description="Удалить аккаунт: /delete @ник"),
 ]
 # Должности назначают владелец и менеджеры
 OWNER_CMDS = ADMIN_CMDS + [
@@ -88,6 +89,59 @@ def assignable(actor: User) -> list[str]:
     if actor.role == "owner":
         return list(POSITIONS)
     return ["senior", "waiter", "trainee"] if actor.position == "manager" else []
+
+
+def is_trainee(u: User) -> bool:
+    """Стажёр — пока не переведён в официанты (старые записи без должности — тоже стажёры)."""
+    return u.role == "trainee" and u.position in (None, "trainee")
+
+
+# SQL-условие «стажёр» — для списков /stats и админки
+TRAINEE_SQL = (User.role == "trainee") & ((User.position == None) | (User.position == "trainee"))  # noqa: E711
+
+
+def can_delete(actor: User, target: User) -> bool:
+    """Владелец — любого; менеджер — всех, кроме менеджеров; старший — только стажёров."""
+    if target.role == "owner" or actor.tg_id == target.tg_id:
+        return False
+    if actor.role == "owner":
+        return True
+    if actor.position == "manager":
+        return target.position != "manager"
+    return actor.position == "senior" and is_trainee(target)
+
+
+async def exam_best(session: AsyncSession, uid: int) -> int | None:
+    return await session.scalar(select(func.max(Attempt.pct)).where(Attempt.user_id == uid, Attempt.mode == "exam"))
+
+
+async def promote(bot: Bot, session: AsyncSession, actor: User, target: User) -> str | None:
+    """Стажёр → официант после сданного экзамена; подтверждает любой админ.
+    Возвращает текст ошибки или None при успехе."""
+    if not (actor.role == "owner" or actor.is_admin):
+        return "Переводить могут владелец, менеджер или старший официант."
+    if not is_trainee(target):
+        return f"{target.full_name} уже не стажёр ({title(target).lower()})."
+    best = await exam_best(session, target.tg_id)
+    if best is None or best < settings.exam_pass_pct:
+        return f"Экзамен ещё не сдан (нужно {settings.exam_pass_pct}%)."
+    await set_position(bot, session, target, "waiter")
+    try:
+        await bot.send_message(target.tg_id, "🎉 Поздравляем! Ты переведён(а) в <b>официанты</b>.")
+    except Exception:
+        pass
+    return None
+
+
+async def delete_user(session: AsyncSession, target: User) -> None:
+    # попытки удалятся каскадом (FK ondelete=CASCADE)
+    await session.delete(target)
+    await session.commit()
+
+
+def promote_kb(tg_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="✅ Перевести в официанты", callback_data=f"promote:{tg_id}")]])
 
 
 async def set_position(bot: Bot, session: AsyncSession, target: User, pos: str) -> None:

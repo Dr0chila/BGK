@@ -51,7 +51,7 @@ async def got_name(m: Message, state: FSMContext, bot: Bot, session: AsyncSessio
         return
     status = "active" if settings.registration_mode == "open" else "pending"
     new = User(tg_id=m.from_user.id, username=m.from_user.username, full_name=name,
-               role="trainee", status=status)
+               role="trainee", position="trainee", status=status)
     session.add(new)
     await session.commit()
     await state.clear()

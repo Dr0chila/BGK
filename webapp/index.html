@@ -222,6 +222,14 @@ nav.tabs .pill{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 
 .possel button{font:600 13px var(--body);border:0;border-radius:999px;padding:8px 13px;background:var(--surface2);color:var(--muted);cursor:pointer}
 .possel button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .possel button:disabled{opacity:.5}
+.acts2{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
+.acts2 .btn{margin:0;font-size:12px;padding:12px 16px}
+.btn.danger{background:transparent;color:var(--pom);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--pom) 45%,transparent)}
+.mini-del{margin-left:auto;font:600 12px var(--body);border:0;background:none;color:var(--muted);cursor:pointer;padding:6px 4px}
+.mini-del:hover{color:var(--pom)}
+.grp{margin-top:22px}
+.grp h3{display:flex;justify-content:space-between;margin-bottom:6px}
+.grp h3 span{color:var(--muted);font-weight:500}
 .pchip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);
   background:var(--surface);font-size:13px;font-weight:700}
 .cheat{margin:18px 0 4px;padding:16px 18px}
@@ -917,7 +925,7 @@ function renderAdmin(){
     <button class="chip" aria-pressed="${adminTab==="pending"}" data-at="pending">Заявки</button>
     <button class="chip" aria-pressed="${adminTab==="staff"}" data-at="staff">Команда</button></div><section id="ad"></section>`;
   app.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{haptic("tap");adminTab=b.dataset.at;renderAdmin()});
-  ({trainees:adminTrainees,pending:adminPending,staff:adminStaff})[adminTab]();
+  ({trainees:adminTrainees,pending:adminPending,staff:adminTeam})[adminTab]();
 }
 async function adminTrainees(){
   const el=$("#ad"); el.innerHTML=skel(3);
@@ -927,7 +935,7 @@ async function adminTrainees(){
     el.innerHTML=`<p class="lead">Всего: ${d.items.length}. Нажми на стажёра — попытки и частые ошибки.</p>`+d.items.map(u=>`
       <button class="card" data-id="${u.id}">
         <div class="who"><b>${esc(u.name)}</b>${pctBadge(u.exam,d.pass)}</div>
-        <div class="meta">${esc(u.title||"")}</div>
+        <div class="meta">${u.ready?`<span class="badge ok">🎓 сдал экзамен — ждёт перевода</span>`:esc(u.title||"")}</div>
         <div class="meta">${u.username?"@"+esc(u.username)+" · ":""}был(а): ${fmtDate(u.last)}</div>
         ${d.topics.map(t=>progRow(t,u.topics[t],d.pass)).join("")}
       </button>`).join("");
@@ -940,12 +948,18 @@ async function adminTrainee(id,list){
     const u=await api("/api/admin/trainees/"+id);
     el.innerHTML=`<button class="back" id="bk">← Все стажёры</button>
       <h2>${esc(u.name)}</h2><div class="meta">${esc(u.title)} · ${u.username?"@"+esc(u.username)+" · ":""}был(а): ${fmtDate(u.last)}</div>
+      ${u.can_promote||u.can_delete?`<div class="acts2">${u.can_promote?`<button class="btn" id="promo">✅ Перевести в официанты</button>`:""}${u.can_delete?`<button class="btn danger" id="del">Удалить</button>`:""}</div>`:""}
       ${posPicker(u)}
       <div class="note">${list.topics.map(t=>progRow(t,u.topics[t],list.pass)).join("")}${progRow("Экзамен",u.exam,list.pass)}${u.exams?`<div class="meta">Попыток экзамена: ${u.exams}</div>`:""}</div>
       <h3>Последние попытки</h3>${u.attempts.length?u.attempts.map(a=>`<div class="att"><span>${a.mode==="exam"?"🎓 Экзамен":esc(a.topic)} · ${a.score}/${a.total}</span><span>${pctBadge(a.pct,list.pass)} <span class="meta">${fmtDate(a.at)}</span></span></div>`).join(""):empty("Попыток нет")}
       <h3>Частые ошибки</h3>${u.mistakes.length?u.mistakes.map(m=>`<div class="att"><span>${esc(m.q)}</span><span class="badge no">${m.n}×</span></div>`).join(""):empty("Ошибок нет")}`;
     $("#bk").onclick=()=>{haptic("tap");adminTrainees()};
     bindPosPicker(el,()=>adminTrainee(id,list));
+    $("#promo")&&($("#promo").onclick=async()=>{
+      if(!await ask(`Перевести ${u.name} в официанты? Из списка стажёров человек пропадёт.`)) return;
+      try{await api("/api/admin/promote/"+id,{method:"POST"});haptic("ok");adminTrainees()}catch(e){haptic("no")}
+    });
+    $("#del")&&($("#del").onclick=()=>deleteUser(u,adminTrainees));
   }catch(e){el.innerHTML=`<div class="warn">Не удалось загрузить стажёра.</div>`}
 }
 // Выбор должности: кнопки только те, что текущему админу можно назначать (решает сервер)
@@ -961,15 +975,25 @@ function bindPosPicker(root,reload){
     catch(e){haptic("no");box.querySelectorAll("button").forEach(x=>x.disabled=false)}
   });
 }
-async function adminStaff(){
+// Подтверждение: нативное окно Telegram, вне Telegram — обычный confirm
+const ask=t=>new Promise(r=>{try{if(TG?.showConfirm){TG.showConfirm(t,ok=>r(!!ok));return}}catch(e){}r(confirm(t))});
+async function deleteUser(u,reload){
+  if(!await ask(`Удалить ${u.name}${u.title?` (${u.title.toLowerCase()})`:""}? Вместе с аккаунтом пропадут все его результаты.`)) return;
+  try{await api("/api/admin/users/"+u.id,{method:"DELETE"});haptic("ok");reload()}catch(e){haptic("no")}
+}
+async function adminTeam(){
   const el=$("#ad"); el.innerHTML=skel(3);
   try{
-    const d=await api("/api/admin/staff");
-    el.innerHTML=`<p class="lead">Владелец, менеджеры и старшие официанты. Назначить нового: в боте <b>/position @ник</b> или в карточке стажёра.</p>`+
-      d.items.map(u=>`<div class="card" style="cursor:default"><div class="who"><b>${esc(u.name)}</b><span class="badge ${u.title==="Владелец"?"no":"ok"}">${esc(u.title)}</span></div>
+    const d=await api("/api/admin/team");
+    const people={};
+    el.innerHTML=`<p class="lead">Все аккаунты по должностям. Новичка ставят стажёром; в официанты — после экзамена, кнопкой в карточке стажёра.</p>`+
+      d.groups.map(g=>`<div class="grp"><h3>${esc(g.title)}<span>${g.items.length}</span></h3>${g.items.map(u=>{people[u.id]=u;return `
+        <div class="card" style="cursor:default"><div class="who"><b>${esc(u.name)}${u.me?" (ты)":""}</b>
+          ${u.can_delete?`<button class="mini-del" data-del="${u.id}">Удалить</button>`:""}</div>
         <div class="meta">${u.username?"@"+esc(u.username):"без username"}</div>${u.options.length?`<div class="possel" data-id="${u.id}">${
-          u.options.map(o=>`<button data-pos="${o.key}" aria-pressed="${u.position===o.key}">${esc(o.title)}</button>`).join("")}</div>`:""}</div>`).join("");
-    bindPosPicker(el,adminStaff);
+          u.options.map(o=>`<button data-pos="${o.key}" aria-pressed="${u.position===o.key}">${esc(o.title)}</button>`).join("")}</div>`:""}</div>`}).join("")}</div>`).join("");
+    bindPosPicker(el,adminTeam);
+    el.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>deleteUser(people[b.dataset.del],adminTeam));
   }catch(e){el.innerHTML=`<div class="warn">Не удалось загрузить команду.</div>`}
 }
 async function adminPending(){

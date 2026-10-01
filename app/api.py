@@ -118,10 +118,11 @@ async def results(body: Result, request: Request, uid: int = Depends(tg_user_id)
                             total=body.total, pct=body.pct,
                             mistakes=[m.model_dump() for m in body.mistakes]))
         await session.commit()
-        if body.mode == "exam" and body.pct >= settings.exam_pass_pct and u.role == "trainee":
+        if body.mode == "exam" and body.pct >= settings.exam_pass_pct and s.is_trainee(u):
             bot: Bot = request.app.state.bot
             await s.notify_admins(bot, session,
-                                  f"🎓 {s.who(u)} сдал(а) экзамен: {body.score}/{body.total} ({body.pct}%)")
+                                  f"🎓 {s.who(u)} сдал(а) экзамен: {body.score}/{body.total} ({body.pct}%).\n"
+                                  "Перевести в официанты?", s.promote_kb(u.tg_id))
     return {"ok": True}
 
 
@@ -140,14 +141,15 @@ def _iso(d):
 
 
 @router.get("/admin/trainees")
-async def admin_trainees(_: int = Depends(admin_id)):
+async def admin_trainees(uid: int = Depends(admin_id)):
     async with Session() as session:
         rows = await session.scalars(
-            select(User).where(User.role == "trainee", User.status == "active").order_by(User.full_name))
+            select(User).where(s.TRAINEE_SQL, User.status == "active").order_by(User.full_name))
         out = []
         for u in rows:
             p = await s.progress(session, u.tg_id)
             out.append({"id": u.tg_id, "name": u.full_name, "username": u.username, "title": s.title(u),
+                        "ready": p["exam"] is not None and p["exam"] >= settings.exam_pass_pct,
                         "topics": p["topics"], "exam": p["exam"], "exams": p["exams"], "last": _iso(p["last"])})
     return {"topics": list(settings.topics), "pass": settings.exam_pass_pct, "items": out}
 
@@ -168,6 +170,8 @@ async def admin_trainee(tg_id: int, uid: int = Depends(admin_id)):
     options = [{"key": k, "title": s.POSITIONS[k]} for k in s.assignable(me) if s.can_assign(me, u, k)]
     return {"id": u.tg_id, "name": u.full_name, "username": u.username, "topics": p["topics"],
             "title": s.title(u), "position": u.position, "options": options,
+            "can_delete": s.can_delete(me, u),
+            "can_promote": s.is_trainee(u) and p["exam"] is not None and p["exam"] >= settings.exam_pass_pct,
             "exam": p["exam"], "exams": p["exams"], "last": _iso(p["last"]), "attempts": attempts,
             "mistakes": [{"q": q, "n": n} for q, n in top]}
 
@@ -194,21 +198,31 @@ async def admin_decide(tg_id: int, body: Decision, request: Request, uid: int = 
     return {"ok": True}
 
 
-@router.get("/admin/staff")
-async def admin_staff(uid: int = Depends(admin_id)):
-    """Команда: владелец и все с админскими должностями — чтобы видеть, кто есть кто."""
+GROUPS = [("owner", "Владелец"), ("manager", "Менеджеры"), ("senior", "Старшие официанты"),
+          ("waiter", "Официанты"), ("trainee", "Стажёры"), ("admin", "Админы без должности")]
+
+
+def _group(u: User) -> str:
+    if u.role == "owner":
+        return "owner"
+    if u.position in ("manager", "senior", "waiter"):
+        return u.position
+    return "admin" if u.role == "admin" else "trainee"
+
+
+@router.get("/admin/team")
+async def admin_team(uid: int = Depends(admin_id)):
+    """Все активные аккаунты по должностям — с тем, что текущему админу можно с ними делать."""
     async with Session() as session:
         me = await session.get(User, uid)
-        rows = await session.scalars(
-            select(User).where(User.role.in_(("owner", "admin")), User.status == "active").order_by(User.full_name))
-        items = [{"id": u.tg_id, "name": u.full_name, "username": u.username, "title": s.title(u),
-                  "position": u.position,
-                  "options": [{"key": k, "title": s.POSITIONS[k]} for k in s.assignable(me) if s.can_assign(me, u, k)]}
-                 for u in rows]
-    # владелец сверху, дальше менеджеры, старшие
-    order = {"Владелец": 0, "Менеджер": 1, "Старший официант": 2}
-    items.sort(key=lambda x: (order.get(x["title"], 3), x["name"]))
-    return {"items": items}
+        rows = list(await session.scalars(select(User).where(User.status == "active").order_by(User.full_name)))
+    by = {k: [] for k, _ in GROUPS}
+    for u in rows:
+        by[_group(u)].append({
+            "id": u.tg_id, "name": u.full_name, "username": u.username, "title": s.title(u), "position": u.position,
+            "options": [{"key": k, "title": s.POSITIONS[k]} for k in s.assignable(me) if s.can_assign(me, u, k)],
+            "can_delete": s.can_delete(me, u), "me": u.tg_id == uid})
+    return {"groups": [{"key": k, "title": t, "items": by[k]} for k, t in GROUPS if by[k]]}
 
 
 class PositionBody(BaseModel):
@@ -231,3 +245,29 @@ async def admin_position(tg_id: int, body: PositionBody, request: Request, uid: 
     except Exception:
         pass
     return {"ok": True, "title": title}
+
+
+@router.post("/admin/promote/{tg_id}")
+async def admin_promote(tg_id: int, request: Request, uid: int = Depends(admin_id)):
+    async with Session() as session:
+        me = await session.get(User, uid)
+        target = await session.get(User, tg_id)
+        if target is None:
+            raise HTTPException(404)
+        err = await s.promote(request.app.state.bot, session, me, target)
+    if err:
+        raise HTTPException(409, err)
+    return {"ok": True}
+
+
+@router.delete("/admin/users/{tg_id}")
+async def admin_delete(tg_id: int, uid: int = Depends(admin_id)):
+    async with Session() as session:
+        me = await session.get(User, uid)
+        target = await session.get(User, tg_id)
+        if target is None:
+            raise HTTPException(404)
+        if not s.can_delete(me, target):
+            raise HTTPException(403, "not allowed")
+        await s.delete_user(session, target)
+    return {"ok": True}

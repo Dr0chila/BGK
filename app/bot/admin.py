@@ -61,13 +61,13 @@ async def decide(c: CallbackQuery, bot: Bot, session: AsyncSession, user: User) 
 
 async def stats_page(session: AsyncSession, page: int) -> tuple[str, InlineKeyboardMarkup | None]:
     total = await session.scalar(
-        select(func.count()).select_from(User).where(User.role == "trainee", User.status == "active"))
+        select(func.count()).select_from(User).where(s.TRAINEE_SQL, User.status == "active"))
     if not total:
         return "Активных стажёров пока нет.", None
     pages = (total + PAGE - 1) // PAGE
     page = max(0, min(page, pages - 1))
     rows = await session.scalars(
-        select(User).where(User.role == "trainee", User.status == "active")
+        select(User).where(s.TRAINEE_SQL, User.status == "active")
         .order_by(User.full_name).offset(page * PAGE).limit(PAGE))
     blocks = []
     for u in rows:
@@ -175,10 +175,63 @@ async def _apply(reply, bot: Bot, session: AsyncSession, actor: User, target: Us
         pass
 
 
+# ---------- перевод стажёра в официанты и удаление ----------
+
+@admin.callback_query(F.data.startswith("promote:"))
+async def promote_cb(c: CallbackQuery, bot: Bot, session: AsyncSession, user: User) -> None:
+    target = await session.get(User, int(c.data.split(":")[1]))
+    if target is None:
+        await c.answer("Аккаунт уже удалён.", show_alert=True)
+        return
+    err = await s.promote(bot, session, user, target)
+    if err:
+        await c.answer(err, show_alert=True)
+        await c.message.edit_reply_markup(reply_markup=None)
+        return
+    await c.message.edit_text(f"✅ {s.who(target)} переведён(а) в официанты — решил(а) {s.who(user)}")
+    await c.answer()
+
+
+@admin.message(Command("delete"))
+async def delete_cmd(m: Message, command: CommandObject, session: AsyncSession, user: User) -> None:
+    if not command.args:
+        await m.answer("Формат: /delete @username — удалить аккаунт и все его результаты.")
+        return
+    target = await s.by_username(session, command.args)
+    if target is None:
+        await m.answer("Не нашёл такого пользователя.")
+        return
+    if not s.can_delete(user, target):
+        await m.answer("Этот аккаунт ты удалить не можешь.")
+        return
+    kb = InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="🗑 Да, удалить", callback_data=f"del:{target.tg_id}"),
+        InlineKeyboardButton(text="Отмена", callback_data="del:cancel")]])
+    await m.answer(f"Удалить {s.who(target)} ({s.title(target).lower()}) вместе со всеми результатами?",
+                   reply_markup=kb)
+
+
+@admin.callback_query(F.data.startswith("del:"))
+async def delete_cb(c: CallbackQuery, session: AsyncSession, user: User) -> None:
+    arg = c.data.split(":")[1]
+    if arg == "cancel":
+        await c.message.edit_text("Отменено.")
+        await c.answer()
+        return
+    target = await session.get(User, int(arg))
+    if target is None or not s.can_delete(user, target):
+        await c.answer("Удалить нельзя или уже удалён.", show_alert=True)
+        return
+    text = f"🗑 Удалён(а): {s.who(target)}"
+    await s.delete_user(session, target)
+    await c.message.edit_text(text)
+    await c.answer()
+
+
 @admin.message(Command("help"))
 async def admin_help(m: Message, user: User) -> None:
     text = ("/stats — стажёры и прогресс\n/trainee @username — подробно по стажёру\n"
-            "/pending — заявки на доступ\n/me — свои результаты")
+            "/pending — заявки на доступ\n/delete @username — удалить аккаунт\n/me — свои результаты")
     if s.assignable(user):
         text += "\n/position @username — назначить должность"
     await m.answer(text)
