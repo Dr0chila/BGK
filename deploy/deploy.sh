@@ -36,7 +36,9 @@ mkdir -p "$SNAP_DIR"
 if [ -f "$SNAP_DIR/current.tgz" ]; then
     cp "$SNAP_DIR/current.tgz" "$SNAP_DIR/$STAMP.tgz"
 fi
-ls -1 "$SNAP_DIR"/20*.tgz 2>/dev/null | sort -r | tail -n +$((KEEP + 1)) | xargs -r rm -f
+# || true: при первом деплое снимков нет, ls падает, и под set -e/pipefail скрипт
+# молча выходил на этой строке, не дойдя до запуска.
+ls -1 "$SNAP_DIR"/20*.tgz 2>/dev/null | sort -r | tail -n +$((KEEP + 1)) | xargs -r rm -f || true
 
 echo "🔹 Бэкап базы перед миграцией..."
 bash deploy/backup.sh || echo "⚠️ Бэкап базы не сделан — проверь pg_dump"
