@@ -1,15 +1,16 @@
 from html import escape
 
 from aiogram import Bot, F, Router
-from aiogram.filters import Command, CommandStart
+from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import dishes
+from app import services as s
 from app.config import settings
 from app.db import User
-from app import services as s
 
 router = Router()
 
@@ -75,7 +76,8 @@ async def name_not_text(m: Message) -> None:
 @router.message(Command("help"))
 async def help_(m: Message) -> None:
     # Админский /help перехватывает admin-роутер (он подключён раньше)
-    await m.answer("/start — открыть обучалку\n/me — мои результаты\n\n"
+    await m.answer("/start — открыть обучалку\n/me — мои результаты\n"
+                   "Напиши название блюда — пришлю состав (шпаргалка).\n\n"
                    "Порядок: учишь темы → проходишь тесты (от 85% тема закрыта) → сдаёшь экзамен.")
 
 
@@ -86,3 +88,32 @@ async def me(m: Message, session: AsyncSession, user: User | None) -> None:
         return
     p = await s.progress(session, user.tg_id)
     await m.answer(f"Твои лучшие результаты:\n\n{s.progress_lines(p)}", reply_markup=s.webapp_kb())
+
+
+# ---------- шпаргалка: любое слово в чат = поиск блюда ----------
+# Последним в роутере и только вне FSM: иначе съест ввод имени при регистрации.
+
+@router.message(StateFilter(None), F.text, ~F.text.startswith("/"))
+async def dish_lookup(m: Message, user: User | None) -> None:
+    if user is None or user.status != "active":
+        await m.answer("Сначала зарегистрируйся: /start")
+        return
+    found = dishes.search(m.text)
+    if len(found) == 1:
+        await m.answer(dishes.card(found[0]))
+    elif found:
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=d["name"], callback_data=f"dish:{dishes.DATA.index(d)}")] for d in found])
+        await m.answer("Нашёл несколько — выбери:", reply_markup=kb)
+    else:
+        sim = dishes.similar(m.text)
+        hint = ("\nПохоже на: " +", ".join(escape(x) for x in sim)) if sim else ""
+        await m.answer(f"Не нашёл «{escape(m.text[:60])}» в меню.{hint}")
+
+
+@router.callback_query(F.data.startswith("dish:"))
+async def dish_card(c: CallbackQuery) -> None:
+    i = int(c.data.split(":")[1])
+    if 0 <= i < len(dishes.DATA):
+        await c.message.answer(dishes.card(dishes.DATA[i]))
+    await c.answer()

@@ -148,6 +148,12 @@ async def webapp():
     return FileResponse(WEBAPP, media_type="text/html", headers={"Cache-Control": "no-cache"})
 
 
+@app.get("/dishes.json")
+async def dishes_json():
+    return FileResponse(WEBAPP.parent / "dishes.json", media_type="application/json",
+                        headers={"Cache-Control": "no-cache"})
+
+
 @app.get("/health")
 async def health():
     """Для deploy.sh и внешнего мониторинга: живы процесс и база."""

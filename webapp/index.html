@@ -144,11 +144,32 @@ header.top{padding-top:calc(22px + var(--tg-safe-top,0px))}
 .big{display:inline-block;animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
 
 /* ---------- профиль ---------- */
-.hello{display:flex;align-items:center;gap:14px;margin:16px 0 4px}
-.ring{--v:0;width:76px;height:76px;flex:0 0 76px;border-radius:50%;display:grid;place-items:center;
-  background:conic-gradient(var(--pom) calc(var(--v)*1%),var(--line) 0);transition:--v .8s}
-.ring b{width:60px;height:60px;border-radius:50%;background:var(--paper);display:grid;place-items:center;font:600 20px Oswald,sans-serif;color:var(--pom)}
-.hello h2{margin:0}
+.phead{position:relative;text-align:center;padding:26px 0 6px;margin:0 -16px;
+  background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--pom) 22%,transparent),transparent 70%)}
+.ava{width:104px;height:104px;margin:0 auto;border-radius:24px;padding:3px;background:linear-gradient(135deg,var(--pom),var(--teal));
+  box-shadow:0 10px 28px rgba(0,0,0,.25);animation:avaIn .6s cubic-bezier(.2,.9,.3,1.25) both}
+.ava img,.ava span{width:100%;height:100%;border-radius:21px;display:grid;place-items:center;object-fit:cover;
+  background:var(--paper);font:600 38px Oswald,sans-serif;color:var(--pom)}
+@keyframes avaIn{from{opacity:0;transform:scale(.8) rotate(-4deg)}}
+.pname{margin:12px 0 8px;font-size:26px}
+.pchips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.pchip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);
+  background:var(--paper);font-size:14px;font-weight:700}
+.cheat{margin:16px 0 4px;padding:14px;border-radius:18px;border:1px solid var(--line);background:color-mix(in srgb,var(--teal-soft) 55%,var(--paper))}
+.cheat label{display:flex;align-items:center;gap:8px;font:500 19px Oswald,sans-serif;color:var(--teal);margin-bottom:8px}
+.cheat input{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--paper);border:2px solid var(--line);
+  border-radius:12px;padding:10px 12px 10px 38px;outline:none;transition:border-color .2s,box-shadow .2s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%23888' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='m13 13 4 4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:12px 50%}
+.cheat input:focus{border-color:var(--teal);box-shadow:0 0 0 4px color-mix(in srgb,var(--teal) 18%,transparent)}
+.cheat .hint{font-size:14px;color:var(--muted);margin-top:8px}
+.cheat .hint button{font:inherit;color:var(--teal);background:none;border:0;padding:0 2px;cursor:pointer;text-decoration:underline dotted}
+.dish-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0 0;animation:rise .3s both}
+.dish-card .hd{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.dish-card .hd b{font-size:18px}
+.dish-card .pr{font:500 15px Oswald,sans-serif;color:var(--teal);white-space:nowrap}
+.dish-card p{margin:4px 0}
+.dish-card .tags{margin-top:6px}
 .next{position:relative;overflow:hidden;border-radius:18px;padding:16px;margin:14px 0;color:#fff;
   background:linear-gradient(135deg,var(--pom),#8E0B21);box-shadow:0 10px 24px rgba(200,16,46,.28)}
 .next .k{font-size:13px;letter-spacing:.6px;text-transform:uppercase;opacity:.85}
@@ -710,12 +731,21 @@ async function renderProfile(){
   profileData=await loadProfile();
   const el=$("#pf"); if(!el) return;   // пока грузили, ушли на другую вкладку
   const A=analyze(profileData.attempts), N=nextStep(A);
+  const nm=profileData.name||TG?.initDataUnsafe?.user?.first_name||"";
   el.innerHTML=`
-    <div class="hello"><div class="ring" style="--v:0"><b>${A.ready}%</b></div>
-      <div><h2>${profileData.name?esc(profileData.name):"Твой прогресс"}</h2><div class="meta">Готовность — средний лучший результат по 5 темам</div></div></div>
+    <div class="phead">
+      <div class="ava" id="ava"><span>${esc(initials(nm))}</span></div>
+      <h2 class="pname">${nm?esc(nm):"Твой прогресс"}</h2>
+      <div class="pchips"><span class="pchip" title="Средний лучший результат по 5 темам">🎯 ${A.ready}% готовность</span>
+        <span class="pchip">✅ ${TOPICS.filter(t=>A.T[t].best>=PASS).length}/5 тем</span>
+        <span class="pchip">🎓 ${A.examBest==null?"—":A.examBest+"%"}</span></div>
+    </div>
+    <div class="cheat"><label for="cq">📖 Шпаргалка по блюдам</label>
+      <input id="cq" type="search" autocomplete="off" enterkeyhint="search" placeholder="Гость спросил? Введи блюдо">
+      <div class="hint" id="cqHint">Например: <button data-q="хинкали">хинкали</button>, <button data-q="чкмерули">чкмерули</button>, <button data-q="пхали">пхали</button></div>
+      <div id="cqRes"></div></div>
     <div class="next${N.done?" done":""}"><div class="k">${N.k}</div><h3>${esc(N.h)}</h3><p>${N.p}</p>
       <div class="row" style="margin:0"><button class="btn" id="n1">${N.btn}</button>${N.btn2?`<button class="btn" id="n2" style="background:transparent;color:#fff;border:2px solid #fff">${N.btn2}</button>`:""}</div></div>
-    <div class="stats3"><div><b>${A.total}</b><span>попыток</span></div><div><b>${TOPICS.filter(t=>A.T[t].best>=PASS).length}/5</b><span>тем закрыто</span></div><div><b>${A.examBest==null?"—":A.examBest+"%"}</b><span>экзамен</span></div></div>
     <h3>По темам</h3>
     ${TOPICS.map(t=>{const x=A.T[t],st=topicState(x),d=x.last!=null&&x.prev!=null?x.last-x.prev:null;
       return `<div class="topic"><div class="hd"><b>${t}</b><span><span class="badge ${st.cls}">${st.txt}</span></span></div>
@@ -728,15 +758,60 @@ async function renderProfile(){
       `<button class="btn" id="fix">🔁 Работа над ошибками</button>`
       :empty(A.total?"Ошибок нет — так держать!":"Пока пусто. Пройди первый тест — здесь появится разбор.")}
     ${A.exams.length?`<h3>Экзамены</h3>`+A.exams.slice(0,5).map(a=>`<div class="att"><span>🎓 ${a.score}/${a.total}</span><span>${pctBadge(a.pct,PASS)} <span class="meta">${fmtDate(a.at)}</span></span></div>`).join(""):""}`;
-  requestAnimationFrame(()=>el.querySelector(".ring")?.style.setProperty("--v",A.ready));
+  loadAvatar(nm);
+  bindCheat();
   $("#n1").onclick=()=>{haptic("tap");N.act()};
   if(N.btn2) $("#n2").onclick=()=>{haptic("tap");N.act2()};
   $("#fix")&&($("#fix").onclick=()=>{haptic("tap");startRun("mistakes")});
   el.querySelectorAll("[data-learn]").forEach(b=>b.onclick=()=>{haptic("tap");learnTab=b.dataset.learn;store.set("bgk_learn",learnTab);go("learn")});
   el.querySelectorAll("[data-test]").forEach(b=>b.onclick=()=>{haptic("tap");startRun("test",b.dataset.test)});
 }
-// CSS-переменную кольца можно анимировать только через @property
-try{CSS.registerProperty({name:"--v",syntax:"<number>",inherits:true,initialValue:"0"})}catch(e){}
+const initials=n=>(n||"").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("")||"🙂";
+// Фото: photo_url из initData → запасной путь через бота (/api/avatar) → инициалы
+function loadAvatar(){
+  const box=$("#ava"); if(!box) return;
+  const show=src=>{const img=new Image();img.alt="";img.onload=()=>{box.replaceChildren(img)};img.onerror=fallback;img.src=src};
+  let triedApi=false;
+  const fallback=()=>{
+    if(triedApi||!TG) return; triedApi=true;
+    fetch("/api/avatar",{headers:{"X-Init-Data":TG.initData}}).then(r=>r.ok?r.blob():null)
+      .then(b=>{if(b) show(URL.createObjectURL(b))}).catch(()=>{});
+  };
+  const url=TG?.initDataUnsafe?.user?.photo_url;
+  url?show(url):fallback();
+}
+
+/* ===================== ШПАРГАЛКА ===================== */
+// Тот же поиск, что у бота (app/dishes.py): каждое слово запроса — начало слова в названии/синонимах
+let DISHES=null;
+const normQ=t=>t.toLowerCase().replace(/ё/g,"е").replace(/[^0-9a-zа-я]+/g," ").trim().split(" ").filter(Boolean);
+const stemQ=t=>t.length>4?t.slice(0,Math.max(3,t.length-2)):t;
+function searchDishes(q){
+  const qt=normQ(q); if(!qt.length||!DISHES) return [];
+  return DISHES.map(d=>{
+    const hay=normQ([d.name,...(d.alias||[])].join(" ")), name=normQ(d.name);
+    if(!qt.every(t=>hay.some(h=>h.startsWith(stemQ(t))))) return null;
+    const sc=100*(name.join(" ")===qt.join(" "))+30*name[0].startsWith(stemQ(qt[0]))+10*qt.filter(t=>name.some(h=>h.startsWith(stemQ(t)))).length-name.length;
+    return [sc,d];
+  }).filter(Boolean).sort((a,b)=>b[0]-a[0]).slice(0,6).map(x=>x[1]);
+}
+const dishCard=d=>`<div class="dish-card"><div class="hd"><b>${esc(d.name)}</b><span class="pr">${esc(d.w)} · ${esc(d.price)}</span></div>
+  <div class="meta">${esc(d.sec)}</div><p>${esc(d.what)}</p>
+  ${d.ing&&d.ing!==d.what?`<p><b>Состав:</b> ${esc(d.ing)}</p>`:""}${d.serve?`<p><b>Подача:</b> ${esc(d.serve)}</p>`:""}
+  ${(d.tags||[]).length?`<div class="tags">${d.tags.map(t=>`<span class="tag${/свинина|орехи|яйцо|остро|рыба|глютен/.test(t)?" w":""}">${esc(t)}</span>`).join("")}</div>`:""}
+  ${d.note?`<div class="warn" style="margin:8px 0 0;padding:8px 10px;font-size:15px">⚠️ ${esc(d.note)}</div>`:""}</div>`;
+async function bindCheat(){
+  const inp=$("#cq"), res=$("#cqRes"), hint=$("#cqHint"); if(!inp) return;
+  if(!DISHES){try{DISHES=await (await fetch("/dishes.json")).json()}catch(e){DISHES=[]}}
+  const run=()=>{
+    const q=inp.value.trim(); hint.hidden=!!q;
+    if(!q){res.innerHTML="";return}
+    const f=searchDishes(q);
+    res.innerHTML=f.length?f.map(dishCard).join(""):`<div class="empty" style="padding:14px 0">Не нашёл «${esc(q)}». Попробуй часть названия.</div>`;
+  };
+  inp.oninput=run;
+  hint.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{inp.value=b.dataset.q;run();haptic("tap")});
+}
 
 /* ===================== ADMIN ===================== */
 // Вкладка видна только админам: роль берём с сервера по подписанному initData.

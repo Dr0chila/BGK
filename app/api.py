@@ -3,7 +3,7 @@ from typing import Literal
 
 from aiogram import Bot
 from aiogram.utils.web_app import safe_parse_webapp_init_data
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 
@@ -64,6 +64,32 @@ async def me(uid: int = Depends(tg_user_id)):
         if u is None:
             return {"registered": False}
         return {"registered": True, "name": u.full_name, "role": u.role, "status": u.status}
+
+
+_avatars: dict[int, tuple[float, bytes | None]] = {}
+AVATAR_TTL = 6 * 3600
+
+
+@router.get("/avatar")
+async def avatar(request: Request, uid: int = Depends(tg_user_id)):
+    """Фото профиля через бота — запасной путь, если Telegram не прислал photo_url
+    в initData. Кэш в памяти на 6 часов, чтобы не дёргать Bot API на каждое открытие."""
+    hit = _avatars.get(uid)
+    if not hit or time.time() - hit[0] > AVATAR_TTL:
+        data = None
+        try:
+            bot: Bot = request.app.state.bot
+            photos = await bot.get_user_profile_photos(uid, limit=1)
+            if photos.total_count:
+                small = photos.photos[0][0]          # самый маленький размер — для аватарки хватает
+                buf = await bot.download(small.file_id)
+                data = buf.read() if buf else None
+        except Exception:
+            data = None
+        hit = _avatars[uid] = (time.time(), data)
+    if not hit[1]:
+        raise HTTPException(404, "no photo")
+    return Response(hit[1], media_type="image/jpeg", headers={"Cache-Control": "private, max-age=3600"})
 
 
 @router.get("/profile")
