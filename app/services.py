@@ -5,6 +5,9 @@ from html import escape
 
 from aiogram import Bot
 from aiogram.types import (
+    BotCommand,
+    BotCommandScopeChat,
+    BotCommandScopeDefault,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     MenuButtonWebApp,
@@ -28,6 +31,43 @@ async def enable_webapp(bot: Bot, chat_id: int) -> None:
         chat_id=chat_id,
         menu_button=MenuButtonWebApp(text="Обучалка", web_app=WebAppInfo(url=settings.webapp_url)),
     )
+
+
+# Подсказки после «/»: у каждой роли свой список (scope на конкретный чат)
+TRAINEE_CMDS = [
+    BotCommand(command="start", description="Открыть обучалку"),
+    BotCommand(command="me", description="Мои результаты"),
+    BotCommand(command="help", description="Что умеет бот"),
+]
+ADMIN_CMDS = TRAINEE_CMDS + [
+    BotCommand(command="stats", description="Стажёры и прогресс"),
+    BotCommand(command="trainee", description="Подробно по стажёру: /trainee @ник"),
+    BotCommand(command="pending", description="Заявки на доступ"),
+]
+OWNER_CMDS = ADMIN_CMDS + [
+    BotCommand(command="makeadmin", description="Сделать админом: /makeadmin @ник"),
+    BotCommand(command="removeadmin", description="Снять админа: /removeadmin @ник"),
+]
+
+
+async def sync_commands(bot: Bot, user: User) -> None:
+    """Админам и владельцу — расширенный список; стажёрам — общий (default)."""
+    scope = BotCommandScopeChat(chat_id=user.tg_id)
+    try:
+        if user.role == "owner":
+            await bot.set_my_commands(OWNER_CMDS, scope=scope)
+        elif user.role == "admin":
+            await bot.set_my_commands(ADMIN_CMDS, scope=scope)
+        else:
+            await bot.delete_my_commands(scope=scope)
+    except Exception:
+        pass  # чат ещё не начат с ботом — подсказки поставятся при следующем старте
+
+
+async def setup_commands(bot: Bot, session: AsyncSession) -> None:
+    await bot.set_my_commands(TRAINEE_CMDS, scope=BotCommandScopeDefault())
+    for a in await admins(session):
+        await sync_commands(bot, a)
 
 
 async def ensure_owner(session: AsyncSession) -> None:

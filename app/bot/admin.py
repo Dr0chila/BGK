@@ -142,7 +142,7 @@ async def trainee(m: Message, command: CommandObject, session: AsyncSession) -> 
 
 # ---------- роли (только владелец) ----------
 
-async def set_role(m: Message, command: CommandObject, session: AsyncSession, role: str) -> None:
+async def set_role(m: Message, bot: Bot, command: CommandObject, session: AsyncSession, role: str) -> None:
     if not command.args:
         await m.answer(f"Формат: /{command.command} @username")
         return
@@ -157,17 +157,18 @@ async def set_role(m: Message, command: CommandObject, session: AsyncSession, ro
     if role == "admin":
         u.status = "active"
     await session.commit()
+    await s.sync_commands(bot, u)
     await m.answer(f"{s.who(u)} теперь {'админ' if role == 'admin' else 'стажёр'}.")
 
 
 @owner.message(Command("makeadmin"))
-async def makeadmin(m: Message, command: CommandObject, session: AsyncSession) -> None:
-    await set_role(m, command, session, "admin")
+async def makeadmin(m: Message, bot: Bot, command: CommandObject, session: AsyncSession) -> None:
+    await set_role(m, bot, command, session, "admin")
 
 
 @owner.message(Command("removeadmin"))
-async def removeadmin(m: Message, command: CommandObject, session: AsyncSession) -> None:
-    await set_role(m, command, session, "trainee")
+async def removeadmin(m: Message, bot: Bot, command: CommandObject, session: AsyncSession) -> None:
+    await set_role(m, bot, command, session, "trainee")
 
 
 @admin.message(Command("help"))

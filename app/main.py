@@ -9,7 +9,7 @@ from pathlib import Path
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import BotCommand, ErrorEvent, Update
+from aiogram.types import ErrorEvent, Update
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import text
@@ -96,8 +96,7 @@ async def lifespan(app: FastAPI):
     app.state.bot = bot
     async with Session() as session:
         await s.ensure_owner(session)
-    await bot.set_my_commands([BotCommand(command="start", description="Начать / открыть обучалку"),
-                               BotCommand(command="me", description="Мои результаты")])
+        await s.setup_commands(bot, session)
     # drop_pending_updates не ставим: что прислали, пока бот перезапускался, должно дойти
     if settings.bot_mode == "webhook":
         await set_webhook()

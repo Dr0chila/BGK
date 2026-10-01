@@ -72,6 +72,13 @@ async def name_not_text(m: Message) -> None:
     await m.answer("Напиши имя и фамилию текстом.")
 
 
+@router.message(Command("help"))
+async def help_(m: Message) -> None:
+    # Админский /help перехватывает admin-роутер (он подключён раньше)
+    await m.answer("/start — открыть обучалку\n/me — мои результаты\n\n"
+                   "Порядок: учишь темы → проходишь тесты (от 85% тема закрыта) → сдаёшь экзамен.")
+
+
 @router.message(Command("me"))
 async def me(m: Message, session: AsyncSession, user: User | None) -> None:
     if user is None or user.status != "active":
